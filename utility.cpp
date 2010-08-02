@@ -28,3 +28,19 @@ void add(const char* end, char* start) {
 
   start[pos] = '\0';
 }
+
+void convert(char arr[], char* ptr) {
+  int i = 0;
+  while (arr[i] != '\0') {
+    ptr[i] = arr[i];
+    i++;
+  }
+  ptr[i] = arr[i];
+}
+
+bool charcmp(char a, char b) {
+  int offset = 32;//'a'-'A';
+  int ca = (int)a;
+  int cb = (int)b;
+  return (a==b) || (ca+offset==cb) || (cb+offset==ca);
+}

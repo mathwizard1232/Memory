@@ -13,6 +13,16 @@ Print::Print()
   this->log = new ofstream("printlog.txt");
   *(this->log) << "Text";
   this->resize();
+
+  //  initscr();
+  //  timeout(0); // Apparently means continuously reading input.
+  //  ^ useful if we need to react after a given time whether or not user replies.
+  //  curs_set(0);
+  //  noecho();
+  initscr(); // Start curses
+  cbreak(); // Don't wait until newline for input
+  noecho(); // If going to display, will do it manually
+  curs_set(0); // Don't display the cursor
 }
 
 Print::~Print()
@@ -22,7 +32,7 @@ Print::~Print()
   ofstream file("closefile.txt");
 }
 
-void Print::print(const char* in)
+void Print::print(const char in[])
 {
   // Note: right now I leak memory here. Should change before program becomes mission-critical.
   // If you're reading this comment and I didn't, I'm sorry. On the other hand, clearly the code was worth
@@ -43,11 +53,16 @@ void Print::print(const char* in)
     }
   }
   
-  this->refresh();
+  this->redraw();
 }
 
-void Print::refresh()
+/*void Print::print(const char in[]) {
+  print(&in);
+  }*/
+
+void Print::redraw()
 {
+  clear();
   int maxwidth = 0;
 
   for (int i = 0; i < this->lines; i++) {
@@ -71,13 +86,17 @@ void Print::refresh()
       mvaddch(skip + i + 1, padding + pos + 1, this->output[i][pos]);
       pos++;
     }
-  }  
+  }
+  refresh();
 }
 
-void Print::clear()
+// Get rid of internal storage of characters
+void Print::cls()
 {
   // Probably leaking memory here.
   this->lines = 0;
+
+  this->redraw();
 }
 
 void Print::resize()
