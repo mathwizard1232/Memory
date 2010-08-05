@@ -18,11 +18,8 @@ Memory m;
 
 int memory(int argc, char* argv[])
 {
+  log();
   Print out = Print();
-  char a[] = "Welcome to memory.";
-  out.print(a);
-  out.print("(L)ogin");
-  out.print("Create a (n)ew user");
 
   m.set_printer(&out);
   char c;
@@ -33,6 +30,7 @@ int memory(int argc, char* argv[])
     if (mode) {
       echo();
       getstr(str);
+      noecho();
       mode = mode ^ m.message(str); // If message returns != 0, then make mode false
     }
     else {

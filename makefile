@@ -1,10 +1,13 @@
-OBJS = utility.o print.o memory.o database.o
+OBJS = utility.o print.o memory.o database.o card.o
 FLAGS=-lncurses -lmongoclient -lboost_thread-mt -lboost_filesystem -lboost_program_options
-all: $(OBJS) memory.cpp main.cpp utility.cpp
+all: memory
+	./memory	
+
+memory: $(OBJS)# memory.cpp main.cpp utility.cpp card.cpp
 	g++ $(OBJS) main.cpp -o memory $(FLAGS)
 
 make-test: test.cpp
-	//Later actually compile the test code and run it.
+	#Later actually compile the test code and run it.
 	g++ test.cpp -o test -lncurses
 
 test: all make-test

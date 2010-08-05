@@ -3,6 +3,7 @@
 #include <curses.h>
 #include <fstream>
 #include <string>
+#include <string.h>
 
 using std::endl;
 using std::string;
@@ -10,8 +11,8 @@ using std::string;
 Print::Print()
   :lines(0), allocated(0), output()//, log("printlog.txt")
 {
-  this->log = new ofstream("printlog.txt");
-  *(this->log) << "Text";
+  //this->log = new ofstream("printlog.txt");
+  //*(this->log) << "Text";
   this->resize();
 
   //  initscr();
@@ -27,9 +28,15 @@ Print::Print()
 
 Print::~Print()
 {
-  this->log->close();
+  //this->log->close();
   
-  ofstream file("closefile.txt");
+  //ofstream file("closefile.txt");
+}
+
+void Print::printf(const char form[], const char arg[]) {
+  char out[length(form)+length(arg)];
+  sprintf(out,form,arg);
+  print(out);
 }
 
 void Print::print(const char in[])
@@ -39,6 +46,9 @@ void Print::print(const char in[])
   // maintaining, so you're welcome.
   char* str = new char[length(in)+1];
   copy(in,str);
+  if (find(str,'\n') != -1) {
+
+  }
 
   if (this->lines < this->allocated)
     this->output[this->lines++] = str;
@@ -116,3 +126,11 @@ void Print::resize()
   this->allocated = newalloc;
 }
 
+void Print::list(vector<const char*> l) {
+  char out[200];
+  for (int i = 0; i < l.size(); i++) {
+    sprintf(out,"%i. ",i+1);
+    strcat(out,l[i]);
+    print(out);
+  }
+}

@@ -1,3 +1,11 @@
+#include "utility.h"
+#include <string>
+#include <fstream>
+
+using std::istream;
+using std::ofstream;
+using std::string;
+
 int length(const char* str)
 {
   if (str[0] == '\0')
@@ -43,4 +51,36 @@ bool charcmp(char a, char b) {
   int ca = (int)a;
   int cb = (int)b;
   return (a==b) || (ca+offset==cb) || (cb+offset==ca);
+}
+
+void getline(istream& i, char*& out) {
+  string in;
+  getline(i, in);
+  out = new char[in.size() + 1];
+  copy(in.c_str(),out);
+}
+
+void log(const char* statement) {
+  ofstream f("log.txt",ofstream::app);
+  f << statement << std::endl;
+}
+
+void log() {
+  ofstream f("log.txt",ofstream::trunc);
+}
+
+void log(const string str) {
+  log(str.c_str());
+}
+
+int find(char* src, const char c, int index) {
+  if (src[0] == c)
+    return index;
+  if (src[0] == '\0')
+    return -1;
+  return find(++src,c,++index);
+}
+
+int find(char* src, const char c) {
+  find(src,c,0);
 }
