@@ -30,6 +30,8 @@ class Memory {
   void which_add();
   void poem();
 
+  void review();
+
   void continue_at(int stat);
   void resume();
 

@@ -14,6 +14,12 @@ int length(const char* str)
     return 1 + length(str + 1);
 }
 
+// Copy with allocate
+void copy_leak(const char* in, char*& out) {
+  out = new char[length(in) + 1];
+  copy(in,out);
+}
+
 int copy(const char* in, char* out) {
   int pos = 0;
   while (in[pos] != '\0') {
@@ -69,6 +75,12 @@ void log() {
   ofstream f("log.txt",ofstream::trunc);
 }
 
+void log(int i) {
+  char c[20];
+  sprintf(c,"%i",i);
+  log(c);
+}
+
 void log(const string str) {
   log(str.c_str());
 }
@@ -83,4 +95,15 @@ int find(char* src, const char c, int index) {
 
 int find(char* src, const char c) {
   find(src,c,0);
+}
+
+void split(char*& src, char point, char*& top) {
+  int index = find(src,point);
+  top = new char[index+1];
+  for (int i = 0; i < index; i++) {
+    top[i] = src[0];
+    src++;
+  }
+  src++;
+  top[index] = '\0';
 }

@@ -1,4 +1,5 @@
-#include "database.h"
+#include "card.h"
+#include "utility.h"
 
 Database::Database() {
   c.connect("localhost.localdomain");
@@ -34,4 +35,28 @@ vector<const char*> Database::extract(cursor c, char field[]) {
     results.push_back(p.getStringField(field));
   }
   return results;
+}
+
+Card* Database::next_review(char* user) {
+  Query q;
+  q.sort("next_review");
+  cursor c = query("memory.data",q);
+  BSONObj n = c->next();
+  Card* r = new Card(n,this);
+  return r;
+}
+
+char* readString(BSONObj b, const char* f) {
+  char* temp;
+  copy_leak(b.getStringField(f),temp);
+  return temp;
+}
+
+int readInt(BSONObj b, const char* f) {
+  return atoi(readString(b,f));
+}
+
+void Database::update(const char* collection, Query q, BSONObj o) {
+  log("Update called");
+  c.update(collection,q,o);
 }

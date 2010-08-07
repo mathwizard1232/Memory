@@ -7,12 +7,16 @@
 #include <mongo/client/dbclient.h>
 #include <vector>
 
+class Card;
+//#include "card.h"
 //using namespace mongo; //bad form
 
 using mongo::Query;
 using mongo::BSONObj;
 using mongo::DBClientConnection;
 typedef mongo::auto_ptr<mongo::DBClientCursor> cursor;
+
+using std::vector;
 
 class Database {
  public:
@@ -26,6 +30,10 @@ class Database {
 
   // Returns an array of strings for existing users.
   vector<const char*> users();
+
+  // Returns the card which is to be reviewed next for the given user.
+  Card* next_review(char* user);
+  void update(const char* collection, Query q, BSONObj o);
 
  private:
   // Run a given query
@@ -42,5 +50,9 @@ class Database {
 
   DBClientConnection c;
 };
+
+// Utility functions for reading from BSONObjs
+int readInt(BSONObj b, const char* field);
+char* readString(BSONObj, const char* f);
 
 #endif

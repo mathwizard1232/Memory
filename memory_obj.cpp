@@ -8,7 +8,8 @@ enum status {main_menu = 0, // Initial screen
              create_user = 4, //adding a new user
              ad = 5, //adding new information (simple)
              poe = 6, // adding a new poem
-             which_ad = 7 // selecting add method
+             which_ad = 7, // selecting add method
+             revie = 8 // review a card
 };
   
 
@@ -102,6 +103,10 @@ int Memory::message(char c) {
         //add();
         which_add();
         return 0;
+      } else if (charcmp(c,'r')) {
+        state = revie;
+        substate = 0;
+        review();
       }
       break;
     case which_ad:
@@ -128,9 +133,39 @@ int Memory::message(char c) {
           switch_to_menu();
         }
       }
+      break;
+    case poe:
+      if (yn(c)) {
+        if (yes(c)) {
+          card->insert(&db,user);
+          p->cls();
+          p->print("Poem added.");
+          state = menu;
+          display_menu();
+        } else {
+          switch_to_menu();
+        }
+      }
+      break;
+    case revie:
+      if (substate == 0) {
+        substate = card->review_msg(c);
+      }
+      if (substate == 1) {
+        review();
+        substate = 0;
+      } else if (substate == 2) {
+        switch_to_menu();
+      }
+      break;
     }
   }
   return 0;
+}
+
+void Memory::review() {
+  card = db.next_review(user);
+  card->review(p);
 }
 
 bool Memory::yn(char c) {

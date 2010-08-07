@@ -47,7 +47,11 @@ void Print::print(const char in[])
   char* str = new char[length(in)+1];
   copy(in,str);
   if (find(str,'\n') != -1) {
-
+    char* top;
+    split(str,'\n',top);
+    print(top);
+    print(str);
+    return;
   }
 
   if (this->lines < this->allocated)
