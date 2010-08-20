@@ -39,7 +39,8 @@ int memory(int argc, char* argv[])
     
       if (c == 'q')
         break;
-      else
+      
+      if ((c != ' ') || (out.print_more())) // print_more() returns 1 if no more
         mode = mode ^ m.message(c); // If message returns != 0, then make mode true
     }
   }

@@ -137,7 +137,9 @@ int Memory::message(char c) {
     case poe:
       if (yn(c)) {
         if (yes(c)) {
+          log("Insert call");
           card->insert(&db,user);
+          log("Inserted");
           p->cls();
           p->print("Poem added.");
           state = menu;
@@ -165,7 +167,12 @@ int Memory::message(char c) {
 
 void Memory::review() {
   card = db.next_review(user);
-  card->review(p);
+  if (card == null) {
+    state = menu;
+    p->print("Please add a flashcard before reviewing.");
+  }
+  else
+    card->review(p);
 }
 
 bool Memory::yn(char c) {
@@ -229,9 +236,9 @@ int Memory::message(char str[]) {
         switch_to_menu();
         return 1;
       } else {
-      card = new Card(str);
-      add();
-      return 0;
+        card = new Card(str);
+        add();
+        return 0;
       }
     } else {
       card->response(str);

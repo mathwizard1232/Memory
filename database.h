@@ -6,7 +6,7 @@
 
 #include <mongo/client/dbclient.h>
 #include <vector>
-
+#include <string>
 class Card;
 //#include "card.h"
 //using namespace mongo; //bad form
@@ -26,7 +26,7 @@ class Database {
   void add_user(const char str[]);
 
   // Add the given object to the given collection
-  void insert(const char coll[], BSONObj o);
+  std::string insert(const char coll[], BSONObj o);
 
   // Returns an array of strings for existing users.
   vector<const char*> users();

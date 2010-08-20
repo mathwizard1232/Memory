@@ -14,4 +14,7 @@ void log();
 void log(const std::string);
 int find(char* src, const char c);
 void split(char*& src, char point, char*& top);
-
+int min(int, int);
+#include <vector>
+using std::vector;
+vector<std::string> split(const std::string& str, const std::string& delimiter);

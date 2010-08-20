@@ -1,5 +1,6 @@
 #include "card.h"
 #include "utility.h"
+using std::string;
 
 Database::Database() {
   c.connect("localhost.localdomain");
@@ -10,8 +11,19 @@ void Database::add_user(const char str[]) {
   c.insert("memory.users",p);
 }
 
-void Database::insert(const char coll[], BSONObj o) {
-  c.insert(coll,o);
+string Database::insert(const char coll[], BSONObj o) {
+  cursor cur;
+  cur = query(coll,o);
+  if (!cur->more()) {
+    c.insert(coll,o);
+    cur = c.query(coll,o);
+  } else {
+    log("Attempted to reinsert element");
+  }
+  BSONObj post = cur->next();
+  BSONElement id;
+  post.getObjectID(id);
+  return id.__oid().str();
 }
 
 vector<const char*> Database::users() {
@@ -41,9 +53,13 @@ Card* Database::next_review(char* user) {
   Query q;
   q.sort("next_review");
   cursor c = query("memory.data",q);
-  BSONObj n = c->next();
-  Card* r = new Card(n,this);
-  return r;
+  if (c->more()) {
+    BSONObj n = c->next();
+    Card* r = new Card(n,this);
+    return r;
+  } else {
+    return null;
+  }
 }
 
 char* readString(BSONObj b, const char* f) {
@@ -53,7 +69,7 @@ char* readString(BSONObj b, const char* f) {
 }
 
 int readInt(BSONObj b, const char* f) {
-  return atoi(readString(b,f));
+  return b.getIntField(f);
 }
 
 void Database::update(const char* collection, Query q, BSONObj o) {

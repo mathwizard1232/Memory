@@ -6,16 +6,25 @@ using std::istream;
 using std::ofstream;
 using std::string;
 
-int length(const char* str)
+/*int length(const char* str)
 {
   if (str[0] == '\0')
     return 0;
   else
     return 1 + length(str + 1);
+    }*/
+
+int length(const char* str) {
+  int l = 0;
+  while (str[l] != '\0') {
+    l++;
+  }
+  return l;
 }
 
 // Copy with allocate
 void copy_leak(const char* in, char*& out) {
+  length(in);
   out = new char[length(in) + 1];
   copy(in,out);
 }
@@ -106,4 +115,36 @@ void split(char*& src, char point, char*& top) {
   }
   src++;
   top[index] = '\0';
+}
+
+int min(int a, int b) {
+  if (a < b)
+    return a;
+  return b;
+}
+
+/* Thanks and glory be to http://oopweb.com/CPP/Documents/CPPHOWTO/Volume/C++Programming-HOWTO-7.html */
+// Modified for multicharacter delimiter
+vector<string> split(const string& str, const string& delimiter = " ")
+{
+  vector<string> tokens;
+  int current = 0;
+  // Find first split point.
+  string::size_type end = str.find(delimiter, 0);
+  // Find end of split point (start of next block).
+  //string::size_type next    = lastPos + delimiter.length();
+
+  while (string::npos != end) {
+    // Found a token, add it to the vector.
+    tokens.push_back(str.substr(current, end-current));
+    // Skip the delimiter.
+    current = end + delimiter.length(); 
+    // Find next "delimiter"
+    end = str.find(delimiter, current);
+  }
+
+  if (current < str.size()-1) {
+    tokens.push_back(str.substr(current));
+  }
+  return tokens;
 }

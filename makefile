@@ -13,7 +13,7 @@ make-test: test.cpp
 test: all make-test
 	test
 
-memory.o: print.o memory_obj.cpp
+memory.o: print.h database.h card.h memory_obj.cpp
 	g++ -c memory_obj.cpp -o memory.o
 
 clean:

@@ -9,21 +9,39 @@ using std::ifstream;
 using std::stringstream;
 using std::string;
 
+Database* Card::db;
+
 Card::Card(const char p[])
-  :type(standard), next_review(time(null))
+  :type(standard), next_review(time(null)), active(true)
 {
-  prompt = new char[length(p)];
+  prompt = new char[length(p)+1];
   copy(p,prompt);
-  log("Created");
+}
+
+Card::Card(const char p[], const char a[], const string u1, const string u2)
+  :type(sequential), next_review(time(null)), active(true)
+{
+  copy_leak(p,prompt);
+  copy_leak(a,ans);
+  unlock1 = u1;
+  unlock2 = u2;
 }
 
 Card::Card(BSONObj b, Database* d) {
-  db = d;
+  this->db = d;
   b.getObjectID(id);
+  log(id);
   review_state = 0;
-  type = readInt(b,"type");
+  int a = readInt(b,"type");
+  log(a);
+  type = a;
   next_review = readInt(b,"next_review");
+  active = (bool) readInt(b,"active");
   switch (type) {
+  case sequential:
+    unlock1 = b.getStringField("unlock1");
+    unlock2 = b.getStringField("unlock2");
+    // Fall through to standard for rest
   case standard:
     prompt = readString(b,"prompt");
     ans = readString(b,"response");
@@ -41,17 +59,75 @@ void Card::response(const char r[]) {
   copy(r,ans);
 }
 
-void Card::insert(Database* db, char user[]) {
+string Card::insert(Database* d, char u[]) {
+  Card::db = d; // Set the database connection for this Card.
+  copy_leak(u,user);
   BSONObj a;
   switch(type) {
+  case sequential:
+    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
+    return Card::db->insert("memory.data",a);
+    break;    
   case standard:  
-    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review);
+    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active);
+    return Card::db->insert("memory.data",a);
     break;
   case poe:
-    a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review);
+    // Don't start reviewing the full poem until entirely memorized.
+    a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
+    string id = Card::db->insert("memory.data",a); // Insert and get the id.
+    log("Inserted main poem.");
+    return decompose(id); // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
     break;
   }
-  db->insert("memory.data",a);
+  
+}
+
+// Break a card down into component parts.
+// These will then be memorized in order and after completed, this card will be reviewed.
+// Returned value is the first id.
+std::string Card::decompose(string id) {
+  vector<string> stanzas;
+  Card* stanza;
+  
+  Card* line;
+  switch (type) {
+  case poe:
+    stanzas = split(ans,"\n\n");
+    char p[1000];
+    sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[stanzas.size()-2].c_str());
+    stanza = new Card(p,stanzas[stanzas.size()-1].c_str(),id); // unlock poem when final stanza memorized
+    // Insert the last stanza, which activates the whole poem
+    // Save the id of the first element of the last stanza to be unlocked by the previous stanza
+    id = stanza->insert(db,user);
+    for (int i = stanzas.size()-2; i > 0; i--) {
+      sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[i-1].c_str());
+      length(stanzas[i].c_str());
+      stanza = new Card(p,stanzas[i].c_str(),id);
+      id = stanza->insert(db,user);
+    }
+    sprintf(p,"In %s, give the first stanza.",prompt);
+    stanza = new Card(p,stanzas[0].c_str(),id);
+    id = stanza->insert(db,user);
+    // Make the first line active
+    unlock(id);
+    return id;
+    break;
+  case sequential:
+    if (find(prompt,'\n') != -1) { // If a sequential prompt has multiple lines, break them up
+      vector<string> lines = split(ans,"\n");
+      char p[1000];
+      char pr[1000];
+      sprintf(p,"%s\n",prompt);
+      for (int i = lines.size()-1; i>=0; i++) {
+        sprintf(pr,"%s\nWhat is the next line?",p);
+        line = new Card(pr,lines[i].c_str(),id);
+        sprintf(p,"%s\n%s\n",p,lines[i].c_str());
+        id = line->insert(db,user);
+      }
+    } // Otherwise, no action
+      return "";
+  } 
 }
 
 void Card::print(Print* p) {
@@ -61,9 +137,10 @@ void Card::print(Print* p) {
     p->printf("Response: %s",ans);
     break;
   case poe:
-    p->printf("Title: %s",prompt);
-    p->printf("Author: %s",author);
-    p->printf("Text: %s",ans);
+    p->printf("Title: %s",prompt,true);
+    p->printf("Author: %s",author,true);
+    p->printf("Text: %s",ans,true);
+    p->redraw();
     break;
   };
 }
@@ -71,17 +148,16 @@ void Card::print(Print* p) {
 void Card::review(Print* pr) {
   p = pr;
   p->cls();
-  p->print(prompt);
+  p->print(prompt,true);
+  p->redraw();
   review_state = 0;
 }
 
 int Card::review_msg(char c) {
-  char a[200];
-  sprintf(a,"rev_msg called with %c and review_state %i",c,review_state);
-  log(a);
   if (review_state == 0) {
     p->cls();
-    p->print(ans);
+    p->print(ans,true);
+    p->redraw();
     review_state = 1;
     return 0;
   } else if (review_state == 1) {

@@ -33,13 +33,13 @@ Print::~Print()
   //ofstream file("closefile.txt");
 }
 
-void Print::printf(const char form[], const char arg[]) {
+void Print::printf(const char form[], const char arg[], bool no_refresh) {
   char out[length(form)+length(arg)];
   sprintf(out,form,arg);
-  print(out);
+  print(out,no_refresh);
 }
 
-void Print::print(const char in[])
+void Print::print(const char in[], bool no_refresh)
 {
   // Note: right now I leak memory here. Should change before program becomes mission-critical.
   // If you're reading this comment and I didn't, I'm sorry. On the other hand, clearly the code was worth
@@ -49,8 +49,8 @@ void Print::print(const char in[])
   if (find(str,'\n') != -1) {
     char* top;
     split(str,'\n',top);
-    print(top);
-    print(str);
+    print(top, no_refresh);
+    print(str, no_refresh);
     return;
   }
 
@@ -67,16 +67,18 @@ void Print::print(const char in[])
     }
   }
   
-  this->redraw();
+  if (!no_refresh) 
+    this->redraw();
 }
 
 /*void Print::print(const char in[]) {
   print(&in);
   }*/
 
-void Print::redraw()
+void Print::redraw(int s) // screen to print
 {
   clear();
+  screen = s;
   int maxwidth = 0;
 
   for (int i = 0; i < this->lines; i++) {
@@ -94,15 +96,35 @@ void Print::redraw()
     skip = (LINES - this->lines) / 2;
   }
 
-  for (int i = 0; i < this->lines; i++) {
+  int offset = screen*(LINES-2);
+  for (int i = 0; i < min(this->lines-offset,LINES-2); i++) {
     int pos = 0;
-    while (this->output[i][pos] != '\0') {
-      mvaddch(skip + i + 1, padding + pos + 1, this->output[i][pos]);
+    while (this->output[i+offset][pos] != '\0') {
+      mvaddch(skip + i + 1, padding + pos + 1, this->output[i+offset][pos]);
+      pos++;
+    }
+  }
+  // if more screens, prompt
+  if (this->lines > offset + LINES - 2) {
+    const char a[] = "Press space to see more";
+    int pos = 0;
+    while (a[pos] != '\0') {
+      mvaddch(LINES-1, padding+pos+1, a[pos]);
       pos++;
     }
   }
   refresh();
 }
+
+// return true when this is called on completed output
+bool Print::print_more() {
+  if (this->lines > (screen + 1)*(LINES-2)) {
+    redraw(++screen);
+    return false;
+  } else {
+    return true;
+  }
+}   
 
 // Get rid of internal storage of characters
 void Print::cls()
