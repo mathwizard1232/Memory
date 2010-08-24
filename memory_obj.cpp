@@ -137,9 +137,7 @@ int Memory::message(char c) {
     case poe:
       if (yn(c)) {
         if (yes(c)) {
-          log("Insert call");
           card->insert(&db,user);
-          log("Inserted");
           p->cls();
           p->print("Poem added.");
           state = menu;

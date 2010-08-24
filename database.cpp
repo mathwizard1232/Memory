@@ -50,7 +50,7 @@ vector<const char*> Database::extract(cursor c, char field[]) {
 }
 
 Card* Database::next_review(char* user) {
-  Query q;
+  Query q = QUERY("active" << true);
   q.sort("next_review");
   cursor c = query("memory.data",q);
   if (c->more()) {
@@ -73,6 +73,31 @@ int readInt(BSONObj b, const char* f) {
 }
 
 void Database::update(const char* collection, Query q, BSONObj o) {
-  log("Update called");
   c.update(collection,q,o);
+}
+
+// Atomicly update only given fields
+void Database::update(const char* collection, string id, BSONObj update) {
+  string q = "{\"_id\":ObjectId(\""+id+"\")}";
+  string u = "{$set : " + update.jsonString() + "}";
+  BSONObj o = mongo::fromjson(u);
+  log(q);
+  c.update(collection,Query(q),o);
+}
+
+void Database::update(const char* collection, BSONElement& e, BSONObj change) {
+  /*  log("update entered");
+  log(e);
+  string u = "{$set : " + update.jsonString() + "}";
+  BSONObj o = mongo::fromjson(u);
+  log(u);
+  //  string a = "{" + e.toString() + "}";
+  string a = e.jsonString(mongo::JS);
+  log(e);
+  log(a);
+  Query q(a);
+  log("Query made");
+  c.update(collection,q,o);*/
+  mongo::OID id = e.__oid();
+  update(collection, id.str(), change);
 }

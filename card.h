@@ -4,6 +4,7 @@
 #include "print.h"
 #include "database.h"
 #include <string>
+#include "utility.h"
 
 using mongo::BSONElement;
 
@@ -33,9 +34,7 @@ class Card {
 
   void updateTime(int a); // Given the grade a, figure out the next time to show the card.
 
-  static void unlock(std::string id) {
-    db->update("memory.data", BSON("_id" << id), BSON("active" << true));
-  }
+  static void unlock(std::string id);
 
  private:
   std::string unlock1; // if sequential, these represent cards to unlock when memorized

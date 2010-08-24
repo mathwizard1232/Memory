@@ -11,6 +11,11 @@ using std::string;
 
 Database* Card::db;
 
+void Card::unlock(std::string id) {
+  db->update("memory.data", id, BSON("active" << true));
+}
+
+
 Card::Card(const char p[])
   :type(standard), next_review(time(null)), active(true)
 {
@@ -19,7 +24,7 @@ Card::Card(const char p[])
 }
 
 Card::Card(const char p[], const char a[], const string u1, const string u2)
-  :type(sequential), next_review(time(null)), active(true)
+  :type(sequential), next_review(time(null)), active(false) // Don't automatically activate sequential. Manually activate the first element.
 {
   copy_leak(p,prompt);
   copy_leak(a,ans);
@@ -30,10 +35,8 @@ Card::Card(const char p[], const char a[], const string u1, const string u2)
 Card::Card(BSONObj b, Database* d) {
   this->db = d;
   b.getObjectID(id);
-  log(id);
   review_state = 0;
   int a = readInt(b,"type");
-  log(a);
   type = a;
   next_review = readInt(b,"next_review");
   active = (bool) readInt(b,"active");
@@ -63,10 +66,19 @@ string Card::insert(Database* d, char u[]) {
   Card::db = d; // Set the database connection for this Card.
   copy_leak(u,user);
   BSONObj a;
+  string id, decomp;
   switch(type) {
   case sequential:
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
-    return Card::db->insert("memory.data",a);
+    id = Card::db->insert("memory.data",a);
+    // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
+    log("Start decomposing sequential");
+    decomp = decompose(id);
+    if (decomp == "") {
+      return id;
+    } else {
+      return decomp;
+    }
     break;    
   case standard:  
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active);
@@ -74,9 +86,9 @@ string Card::insert(Database* d, char u[]) {
     break;
   case poe:
     // Don't start reviewing the full poem until entirely memorized.
+    active = false;
     a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
     string id = Card::db->insert("memory.data",a); // Insert and get the id.
-    log("Inserted main poem.");
     return decompose(id); // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
     break;
   }
@@ -100,12 +112,15 @@ std::string Card::decompose(string id) {
     // Insert the last stanza, which activates the whole poem
     // Save the id of the first element of the last stanza to be unlocked by the previous stanza
     id = stanza->insert(db,user);
+    log("First stanza inserted");
     for (int i = stanzas.size()-2; i > 0; i--) {
       sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[i-1].c_str());
       length(stanzas[i].c_str());
       stanza = new Card(p,stanzas[i].c_str(),id);
+      log("Stanza inserted");
       id = stanza->insert(db,user);
     }
+    log("Most stanzas inserted");
     sprintf(p,"In %s, give the first stanza.",prompt);
     stanza = new Card(p,stanzas[0].c_str(),id);
     id = stanza->insert(db,user);
@@ -114,17 +129,22 @@ std::string Card::decompose(string id) {
     return id;
     break;
   case sequential:
-    if (find(prompt,'\n') != -1) { // If a sequential prompt has multiple lines, break them up
+    log("Sequential decomposition of:");
+    log(ans);
+    if (find(ans,'\n') != -1) { // If a sequential answer has multiple lines, break them up
       vector<string> lines = split(ans,"\n");
       char p[1000];
-      char pr[1000];
-      sprintf(p,"%s\n",prompt);
-      for (int i = lines.size()-1; i>=0; i++) {
-        sprintf(pr,"%s\nWhat is the next line?",p);
-        line = new Card(pr,lines[i].c_str(),id);
-        sprintf(p,"%s\n%s\n",p,lines[i].c_str());
+      for (int i = lines.size()-1; i>=0; i--) {
+        sprintf(p,"%s\n\n",prompt);
+        for (int j = 0; j < i; j++) {
+          sprintf(p,"%s%s\n",p,lines[j].c_str());
+        }
+        sprintf(p,"%sWhat is the next line?",p);
+        line = new Card(p,lines[i].c_str(),id);
+        sprintf(p,"%s\n%s",p,lines[lines.size()-i-1].c_str());
         id = line->insert(db,user);
       }
+      return id; // Return the id of the first line
     } // Otherwise, no action
       return "";
   } 
@@ -187,6 +207,7 @@ int Card::grade(char c) {
   return (a == -1) + 1;
 }
 
+using mongo::JsonStringFormat;
 // Determine when the next review should be based on the grade
 void Card::updateTime(int g) {
   int t = time(null);
@@ -202,12 +223,16 @@ void Card::updateTime(int g) {
   case 5:
     t += 60*60*24*2; break;
   }
-  log("a");
-  log(t);
   //fprintf(stderr,"%i time, not going to work",t);
-  db->update("memory.data",
+  /*  db->update("memory.data",
              BSON("_id" << id),
-             BSON("next_review" << t));
+             BSON("next_review" << t));*/
+  log("Try update");
+  log(id);
+  log(id.toString());
+  //  log(id.jsonString(mongo::JsonStringFormat::Strict));
+  db->update("memory.data",id,BSON("next_review" << t));
+  log("Update done");
 }
 
 /* Poems must be plain ASCII text.

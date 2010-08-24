@@ -13,6 +13,7 @@ class Card;
 
 using mongo::Query;
 using mongo::BSONObj;
+using mongo::BSONElement;
 using mongo::DBClientConnection;
 typedef mongo::auto_ptr<mongo::DBClientCursor> cursor;
 
@@ -34,6 +35,9 @@ class Database {
   // Returns the card which is to be reviewed next for the given user.
   Card* next_review(char* user);
   void update(const char* collection, Query q, BSONObj o);
+  // Atomic update rather than entire erase.
+  void update(const char* collection, std::string id, BSONObj up);
+  void update(const char* collection, BSONElement& e, BSONObj o);
 
  private:
   // Run a given query
