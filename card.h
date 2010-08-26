@@ -53,7 +53,9 @@ class Card {
   };
   int next_review;
   static Database* db;
-  BSONElement id;
+  std::string id;
+  int last_interval; // Previous number of seconds used before reviewing. Ignores whether this card was reviewed early or late.
+  bool previous_success; // True if last g >= 4, false if last g <= 2. Skip history of 3s.
 };
 
 #endif

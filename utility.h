@@ -18,3 +18,4 @@ int min(int, int);
 #include <vector>
 using std::vector;
 vector<std::string> split(const std::string& str, const std::string& delimiter);
+std::string i_str(int i);

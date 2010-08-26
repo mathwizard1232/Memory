@@ -148,3 +148,10 @@ vector<string> split(const string& str, const string& delimiter = " ")
   }
   return tokens;
 }
+#include <sstream>
+using std::stringstream;
+string i_str(int i) {
+  stringstream ss;
+  ss << i;
+  return ss.str();
+}

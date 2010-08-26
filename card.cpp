@@ -34,12 +34,26 @@ Card::Card(const char p[], const char a[], const string u1, const string u2)
 
 Card::Card(BSONObj b, Database* d) {
   this->db = d;
-  b.getObjectID(id);
+  BSONElement i;
+  b.getObjectID(i);
+  id = i.__oid().str();
   review_state = 0;
   int a = readInt(b,"type");
   type = a;
   next_review = readInt(b,"next_review");
   active = (bool) readInt(b,"active");
+  last_interval = readInt(b,"last_interval");
+  if (last_interval < 0) {
+    last_interval = 0;
+    previous_success = 0;
+  } else {
+    int tmp = readInt(b,"previous_success");
+    if (tmp < 0) { // Must have only gotten 3s. Treat as no previous success
+      previous_success = false;
+    } else {
+      previous_success = (bool) tmp;
+    }
+  }
   switch (type) {
   case sequential:
     unlock1 = b.getStringField("unlock1");
@@ -72,7 +86,6 @@ string Card::insert(Database* d, char u[]) {
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
     id = Card::db->insert("memory.data",a);
     // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
-    log("Start decomposing sequential");
     decomp = decompose(id);
     if (decomp == "") {
       return id;
@@ -112,15 +125,12 @@ std::string Card::decompose(string id) {
     // Insert the last stanza, which activates the whole poem
     // Save the id of the first element of the last stanza to be unlocked by the previous stanza
     id = stanza->insert(db,user);
-    log("First stanza inserted");
     for (int i = stanzas.size()-2; i > 0; i--) {
       sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[i-1].c_str());
       length(stanzas[i].c_str());
       stanza = new Card(p,stanzas[i].c_str(),id);
-      log("Stanza inserted");
       id = stanza->insert(db,user);
     }
-    log("Most stanzas inserted");
     sprintf(p,"In %s, give the first stanza.",prompt);
     stanza = new Card(p,stanzas[0].c_str(),id);
     id = stanza->insert(db,user);
@@ -129,8 +139,6 @@ std::string Card::decompose(string id) {
     return id;
     break;
   case sequential:
-    log("Sequential decomposition of:");
-    log(ans);
     if (find(ans,'\n') != -1) { // If a sequential answer has multiple lines, break them up
       vector<string> lines = split(ans,"\n");
       char p[1000];
@@ -211,28 +219,54 @@ using mongo::JsonStringFormat;
 // Determine when the next review should be based on the grade
 void Card::updateTime(int g) {
   int t = time(null);
+  int interval;
   switch (g) {
   case 1:
-    t += 10; break;
+    interval = 10; break;
   case 2:
-    t += 60; break;
+    interval = 60; break;
   case 3:
-    t += 60*30; break;
+    interval = 60*30; break;
   case 4:
-    t += 60*60*10; break;
+    interval = 60*60*10; break;
   case 5:
-    t += 60*60*24*2; break;
+    interval = 60*60*24*2; break;
   }
-  //fprintf(stderr,"%i time, not going to work",t);
-  /*  db->update("memory.data",
-             BSON("_id" << id),
-             BSON("next_review" << t));*/
-  log("Try update");
-  log(id);
-  log(id.toString());
-  //  log(id.jsonString(mongo::JsonStringFormat::Strict));
-  db->update("memory.data",id,BSON("next_review" << t));
-  log("Update done");
+  if (last_interval != 0) {
+    // If we repeated a category, move further along it. Makes less difference for 1&2, since will usually be earliest possible anyhow.
+    if ((g <= 2) && (!previous_success)) {
+      interval = last_interval - 60;
+    } else if ((g >= 4) && (previous_success)) {
+      interval = last_interval;
+      if (g == 4) {
+        interval *= 3;
+      } else {
+        interval *= 8;
+      }
+    }
+  }
+  log("Next interval for: " + id);
+  log(interval);
+  log("After grade of " + i_str(g));
+  log("And previous " + i_str(previous_success) + " and prev_int " + i_str(last_interval));
+
+  if (g >= 4) {
+    previous_success = true;
+  } else if (g <= 2) {
+    previous_success = false;
+  }
+  t += interval;
+  log("Storing prev_succ of " + i_str(previous_success));
+  db->update("memory.data",id,BSON("next_review" << t << "previous_success" << previous_success << "last_interval" << interval));
+
+  // If this is a sequential card and a "good" rating was given (>=4), unlock next card.
+  if ((type == sequential) && (g>=4)) {
+    unlock(unlock1);
+    // If there is a second to unlock, do so.
+    if (unlock2 != "") {
+      unlock(unlock2);
+    }
+  }
 }
 
 /* Poems must be plain ASCII text.
