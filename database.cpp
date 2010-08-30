@@ -83,7 +83,6 @@ void Database::update(const char* collection, string id, BSONObj update) {
   log(q);
   log(u);
   BSONObj o = mongo::fromjson(u);
-  log("Parsed and ready to update");
   c.update(collection,Query(q),o);
 }
 
@@ -103,18 +102,14 @@ void Database::update(const char* collection, BSONElement& e, BSONObj change) {
 }
 using mongo::BSONObjBuilder;
 void Database::update(const char* collection, string id, const char* field, vector<string> data) {
-  log("Start vector update");
   BSONObjBuilder b;
   for (int i = 0; i < data.size(); i++) {
     b.appendElements(BSON(i_str(i) << data[i].c_str()));
   }
-  log("Finished append");
   BSONObj o = b.done();
   BSONObjBuilder c;
   c.appendArray(field, o);
-  log("Created BSONObj with array");
   BSONObj p = c.done();
-  log("Calling update");
   update(collection, id, p);
 }
 

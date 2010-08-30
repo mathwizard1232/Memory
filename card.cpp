@@ -101,14 +101,11 @@ string Card::insert(Database* d, char u[]) {
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
     id = Card::db->insert("memory.data",a);
     // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
-    log("Start decompose");
     decomp = decompose(id,subparts);
     if (decomp == "") {
       return id;
     } else {
-      log("Start set components");
       setComponents(id, subparts);
-      log("Components set");
       return decomp;
     }
     break;    
@@ -282,7 +279,6 @@ void Card::updateTime(int g) {
     previous_success = false;
   }
   t += interval;
-  log("Storing prev_succ of " + i_str(previous_success));
   db->update("memory.data",id,BSON("next_review" << t << "previous_success" << previous_success << "last_interval" << interval));
 
   // If this is a sequential card and a "good" rating was given (>=4), unlock next card.
@@ -301,11 +297,11 @@ void Card::updateTime(int g) {
         front(components[i],components.size() - i);
       }
     } else if (g == 2) { // Move any element which is below the mean next_review time to the front.
-      int sum = 0;
+      long sum = 0;
       for (int i = 0; i < components.size(); i++) {
         sum += db->getInt("memory.data",components[i],"next_review");
       }
-      int mean = (int) ((double) sum / components.size());
+      int mean = (sum / components.size()) + 1;
       for (int i = components.size() - 1; i >= 0; i--) {
         if (db->getInt("memory.data",components[i],"next_review") <= mean) {
           front(components[i],components.size() - i);
