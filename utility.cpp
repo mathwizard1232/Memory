@@ -155,3 +155,7 @@ string i_str(int i) {
   ss << i;
   return ss.str();
 }
+
+const char* i_cstr(int i) {
+  return i_str(i).c_str();
+}

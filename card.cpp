@@ -15,6 +15,9 @@ void Card::unlock(std::string id) {
   db->update("memory.data", id, BSON("active" << true));
 }
 
+void Card::front(std::string id, int offset) {
+  db->update("memory.data", id, BSON("next_review" << (int)time(null) + offset));
+}
 
 Card::Card(const char p[])
   :type(standard), next_review(time(null)), active(true)
@@ -24,7 +27,7 @@ Card::Card(const char p[])
 }
 
 Card::Card(const char p[], const char a[], const string u1, const string u2)
-  :type(sequential), next_review(time(null)), active(false) // Don't automatically activate sequential. Manually activate the first element.
+  :type(sequential), next_review(time(null)), components(), active(false) // Don't automatically activate sequential. Manually activate the first element.
 {
   copy_leak(p,prompt);
   copy_leak(a,ans);
@@ -69,6 +72,17 @@ Card::Card(BSONObj b, Database* d) {
     ans = readString(b,"text");
     break;
   }    
+
+  if ((type == sequential) || (type == poe)) {
+    if (b.hasField("components")) { // Ignore atomic sequentials
+      BSONObj arr = b.getObjectField("components");
+      components = db->b_arr(arr);
+    }
+  }
+}
+
+void Card::setComponents(const string id, const vector<string> comp) {
+  db->update("memory.data",id,"components",comp);
 }
 
 void Card::response(const char r[]) {
@@ -81,15 +95,20 @@ string Card::insert(Database* d, char u[]) {
   copy_leak(u,user);
   BSONObj a;
   string id, decomp;
+  vector<string> subparts;
   switch(type) {
   case sequential:
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
     id = Card::db->insert("memory.data",a);
     // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
-    decomp = decompose(id);
+    log("Start decompose");
+    decomp = decompose(id,subparts);
     if (decomp == "") {
       return id;
     } else {
+      log("Start set components");
+      setComponents(id, subparts);
+      log("Components set");
       return decomp;
     }
     break;    
@@ -102,7 +121,9 @@ string Card::insert(Database* d, char u[]) {
     active = false;
     a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
     string id = Card::db->insert("memory.data",a); // Insert and get the id.
-    return decompose(id); // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
+    decomp = decompose(id,subparts);
+    setComponents(id,subparts);
+    return decomp; // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
     break;
   }
   
@@ -111,7 +132,8 @@ string Card::insert(Database* d, char u[]) {
 // Break a card down into component parts.
 // These will then be memorized in order and after completed, this card will be reviewed.
 // Returned value is the first id.
-std::string Card::decompose(string id) {
+// Push the id of each component into parts. Don't touch current contents.
+std::string Card::decompose(string id, vector<string>& parts) {
   vector<string> stanzas;
   Card* stanza;
   
@@ -125,15 +147,18 @@ std::string Card::decompose(string id) {
     // Insert the last stanza, which activates the whole poem
     // Save the id of the first element of the last stanza to be unlocked by the previous stanza
     id = stanza->insert(db,user);
+    parts.push_back(id);
     for (int i = stanzas.size()-2; i > 0; i--) {
       sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[i-1].c_str());
       length(stanzas[i].c_str());
       stanza = new Card(p,stanzas[i].c_str(),id);
       id = stanza->insert(db,user);
+      parts.push_back(id);
     }
     sprintf(p,"In %s, give the first stanza.",prompt);
     stanza = new Card(p,stanzas[0].c_str(),id);
     id = stanza->insert(db,user);
+    parts.push_back(id);
     // Make the first line active
     unlock(id);
     return id;
@@ -151,6 +176,7 @@ std::string Card::decompose(string id) {
         line = new Card(p,lines[i].c_str(),id);
         sprintf(p,"%s\n%s",p,lines[lines.size()-i-1].c_str());
         id = line->insert(db,user);
+        parts.push_back(id);
       }
       return id; // Return the id of the first line
     } // Otherwise, no action
@@ -266,6 +292,39 @@ void Card::updateTime(int g) {
     if (unlock2 != "") {
       unlock(unlock2);
     }
+  }
+
+  // If this card is composed of multiple elements, and a grade == 1 was given, move the elements to the front and this slightly behind.
+  if (components.size() > 0) {
+    if (g == 1) {
+      for (int i = components.size() - 1; i >= 0; i--) {
+        front(components[i],components.size() - i);
+      }
+    } else if (g == 2) { // Move any element which is below the mean next_review time to the front.
+      int sum = 0;
+      for (int i = 0; i < components.size(); i++) {
+        sum += db->getInt("memory.data",components[i],"next_review");
+      }
+      int mean = (int) ((double) sum / components.size());
+      for (int i = components.size() - 1; i >= 0; i--) {
+        if (db->getInt("memory.data",components[i],"next_review") <= mean) {
+          front(components[i],components.size() - i);
+        }
+      }
+    } else if (g == 3) { // Move the element(s) which is to be reviewed the soonest to the front.
+      int min = db->getInt("memory.data",components[0],"next_review");
+      int temp;
+      for (int i = 1; i < components.size(); i++) {
+        temp = db->getInt("memory.data",components[i],"next_review");
+        if (temp < min) { min = temp; }
+      }
+
+      for (int i = components.size() - 1; i >= 0; i--) {
+        if (db->getInt("memory.data",components[i],"next_review") <= min) {
+          front(components[i],components.size() - i);
+        }
+      }
+    } // TODO: Eventually, might consider strengthening next_review or last_interval for components on that basis of a pass on the whole.
   }
 }
 

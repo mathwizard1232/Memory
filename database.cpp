@@ -80,11 +80,50 @@ void Database::update(const char* collection, Query q, BSONObj o) {
 void Database::update(const char* collection, string id, BSONObj update) {
   string q = "{\"_id\":ObjectId(\""+id+"\")}";
   string u = "{$set : " + update.jsonString() + "}";
+  log(q);
+  log(u);
   BSONObj o = mongo::fromjson(u);
+  log("Parsed and ready to update");
   c.update(collection,Query(q),o);
+}
+
+BSONObj Database::get(const char* collection, string id) {
+  string q = "{\"_id\":ObjectId(\""+id+"\")}";
+  cursor c = query(collection,Query(q));
+  return c->next();
+}
+
+int Database::getInt(const char* collection, string id, const char* field) {
+  return readInt(get(collection,id),field);
 }
 
 void Database::update(const char* collection, BSONElement& e, BSONObj change) {
   mongo::OID id = e.__oid();
   update(collection, id.str(), change);
+}
+using mongo::BSONObjBuilder;
+void Database::update(const char* collection, string id, const char* field, vector<string> data) {
+  log("Start vector update");
+  BSONObjBuilder b;
+  for (int i = 0; i < data.size(); i++) {
+    b.appendElements(BSON(i_str(i) << data[i].c_str()));
+  }
+  log("Finished append");
+  BSONObj o = b.done();
+  BSONObjBuilder c;
+  c.appendArray(field, o);
+  log("Created BSONObj with array");
+  BSONObj p = c.done();
+  log("Calling update");
+  update(collection, id, p);
+}
+
+vector<string> Database::b_arr(BSONObj arr) {
+  vector<string> out;
+  int index = 0;
+  while (arr.hasField(i_cstr(index))) {
+    out.push_back(arr.getStringField(i_cstr(index)));
+    index++;
+  }
+  return out;
 }

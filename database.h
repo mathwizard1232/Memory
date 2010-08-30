@@ -38,7 +38,11 @@ class Database {
   // Atomic update rather than entire erase.
   void update(const char* collection, std::string id, BSONObj up);
   void update(const char* collection, BSONElement& e, BSONObj o);
+  void update(const char* collection, std::string id, const char* field, vector<std::string> data);
 
+  vector<std::string> b_arr(BSONObj arr); // Convert a BSON array to a vector
+  BSONObj get(const char* collection, std::string id);
+  int getInt(const char* collection, std::string id, const char* field); // Read the int value from the given field in given obj
  private:
   // Run a given query
   cursor query(const char collection[], 
