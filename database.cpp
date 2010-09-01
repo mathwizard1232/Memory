@@ -51,7 +51,9 @@ vector<const char*> Database::extract(cursor c, char field[]) {
 
 Card* Database::next_review(char* user) {
   Query q = QUERY("active" << true);
-  q.sort("next_review");
+  //  q.sort("next_review");
+  //  q.sort("_id",-1);
+  q.sort(BSON("next_review" << 1 << "_id" << -1));
   cursor c = query("memory.data",q);
   if (c->more()) {
     BSONObj n = c->next();
@@ -70,6 +72,10 @@ char* readString(BSONObj b, const char* f) {
 
 int readInt(BSONObj b, const char* f) {
   return b.getIntField(f);
+}
+
+bool readBool(BSONObj b, const char* f) {
+  return b.getBoolField(f);
 }
 
 void Database::update(const char* collection, Query q, BSONObj o) {

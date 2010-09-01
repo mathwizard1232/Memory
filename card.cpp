@@ -50,12 +50,13 @@ Card::Card(BSONObj b, Database* d) {
     last_interval = 0;
     previous_success = 0;
   } else {
-    int tmp = readInt(b,"previous_success");
+    /*    int tmp = readInt(b,"previous_success");
     if (tmp < 0) { // Must have only gotten 3s. Treat as no previous success
       previous_success = false;
     } else {
       previous_success = (bool) tmp;
-    }
+      }*/
+    previous_success = readBool(b, "previous_success");
   }
   switch (type) {
   case sequential:
@@ -89,41 +90,47 @@ void Card::response(const char r[]) {
   ans = new char[length(r)];
   copy(r,ans);
 }
-
-string Card::insert(Database* d, char u[]) {
+// This_id is the id of this card inserted. The return value is the first element to be activated for this block of memory.
+// For a basic flashcard, these are identical.
+string Card::insert(Database* d, char u[], string& this_id) {
   Card::db = d; // Set the database connection for this Card.
   copy_leak(u,user);
   BSONObj a;
-  string id, decomp;
+  string decomp;
   vector<string> subparts;
   switch(type) {
   case sequential:
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
-    id = Card::db->insert("memory.data",a);
+    this_id = Card::db->insert("memory.data",a);
     // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
-    decomp = decompose(id,subparts);
+    decomp = decompose(this_id,subparts);
     if (decomp == "") {
-      return id;
+      return this_id;
     } else {
-      setComponents(id, subparts);
+      setComponents(this_id, subparts);
       return decomp;
     }
     break;    
   case standard:  
     a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active);
-    return Card::db->insert("memory.data",a);
+    this_id = Card::db->insert("memory.data",a);
+    return this_id;
     break;
   case poe:
     // Don't start reviewing the full poem until entirely memorized.
     active = false;
     a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
-    string id = Card::db->insert("memory.data",a); // Insert and get the id.
-    decomp = decompose(id,subparts);
-    setComponents(id,subparts);
+    this_id = Card::db->insert("memory.data",a); // Insert and get the id.
+    decomp = decompose(this_id,subparts);
+    setComponents(this_id,subparts);
     return decomp; // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
     break;
-  }
-  
+  }  
+}
+
+string Card::insert(Database* db, char u[]) {
+  string temp;
+  return insert(db,u,temp);
 }
 
 // Break a card down into component parts.
@@ -135,27 +142,28 @@ std::string Card::decompose(string id, vector<string>& parts) {
   Card* stanza;
   
   Card* line;
+  string stanza_id;
   switch (type) {
   case poe:
     stanzas = split(ans,"\n\n");
     char p[1000];
-    sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[stanzas.size()-2].c_str());
+    sprintf(p,("In %s, stanza #" + i_str(stanzas.size()) + ", following:\n%s").c_str(),prompt,stanzas[stanzas.size()-2].c_str());
     stanza = new Card(p,stanzas[stanzas.size()-1].c_str(),id); // unlock poem when final stanza memorized
     // Insert the last stanza, which activates the whole poem
     // Save the id of the first element of the last stanza to be unlocked by the previous stanza
-    id = stanza->insert(db,user);
-    parts.push_back(id);
+    id = stanza->insert(db,user,stanza_id);
+    parts.push_back(stanza_id);
     for (int i = stanzas.size()-2; i > 0; i--) {
-      sprintf(p,"In %s, stanza following:\n%s",prompt,stanzas[i-1].c_str());
+      sprintf(p,("In %s, stanza #" + i_str(i+1) + ", following:\n%s").c_str(),prompt,stanzas[i-1].c_str());
       length(stanzas[i].c_str());
       stanza = new Card(p,stanzas[i].c_str(),id);
-      id = stanza->insert(db,user);
-      parts.push_back(id);
+      id = stanza->insert(db,user,stanza_id);
+      parts.push_back(stanza_id);
     }
     sprintf(p,"In %s, give the first stanza.",prompt);
     stanza = new Card(p,stanzas[0].c_str(),id);
-    id = stanza->insert(db,user);
-    parts.push_back(id);
+    id = stanza->insert(db,user,stanza_id);
+    parts.push_back(stanza_id);
     // Make the first line active
     unlock(id);
     return id;
@@ -258,7 +266,7 @@ void Card::updateTime(int g) {
   if (last_interval != 0) {
     // If we repeated a category, move further along it. Makes less difference for 1&2, since will usually be earliest possible anyhow.
     if ((g <= 2) && (!previous_success)) {
-      interval = last_interval - 60;
+      //interval = last_interval - 60; // If we're failing, just have to repeat as soon as we can. Nothing else to do.
     } else if ((g >= 4) && (previous_success)) {
       interval = last_interval;
       if (g == 4) {
@@ -279,11 +287,15 @@ void Card::updateTime(int g) {
     previous_success = false;
   }
   t += interval;
+
+  if ((components.size() > 0) && (g == 1)) {
+    t += components.size();
+  }
   db->update("memory.data",id,BSON("next_review" << t << "previous_success" << previous_success << "last_interval" << interval));
 
   // If this is a sequential card and a "good" rating was given (>=4), unlock next card.
   if ((type == sequential) && (g>=4)) {
-    unlock(unlock1);
+    unlock(unlock1); // TODO: If newly unlocked, put at "present" rather than creation time, to prevent overloading.
     // If there is a second to unlock, do so.
     if (unlock2 != "") {
       unlock(unlock2);

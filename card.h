@@ -23,6 +23,7 @@ class Card {
   void poem(const char file[]);
   std::string decompose(std::string id,std::vector<std::string>& parts); // make constituent cards and store them as well. If id provided, use to unlock in correct order. String returned is id of first element.
 
+  std::string insert(Database* db, char user[], std::string& this_id);
   std::string insert(Database* db, char user[]);
   void print(Print* p);
 
