@@ -268,11 +268,13 @@ void Card::updateTime(int g) {
     if ((g <= 2) && (!previous_success)) {
       //interval = last_interval - 60; // If we're failing, just have to repeat as soon as we can. Nothing else to do.
     } else if ((g >= 4) && (previous_success)) {
-      interval = last_interval;
+      if (last_interval > interval) {
+        interval = last_interval;
+      }
       if (g == 4) {
         interval *= 3;
       } else {
-        interval *= 8;
+        interval *= 6;
       }
     }
   }
@@ -293,6 +295,7 @@ void Card::updateTime(int g) {
   }
   db->update("memory.data",id,BSON("next_review" << t << "previous_success" << previous_success << "last_interval" << interval));
 
+  // TODO: Abstract below into separate functions. If not significantly reduced in size, consider eventually separate class structure.
   // If this is a sequential card and a "good" rating was given (>=4), unlock next card.
   if ((type == sequential) && (g>=4)) {
     unlock(unlock1); // TODO: If newly unlocked, put at "present" rather than creation time, to prevent overloading.
