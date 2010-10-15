@@ -2,6 +2,10 @@ memory
 
 Experimental software - Use only at your own risk and discretion. No secure storage yet available.
 
+INSTALL:
+make install - compiles program and copies to /usr/bin
+make - compile program and run it. Requires mongodb running on default (27017) port
+
 def: memory attempts to transfer knowledge from the computer to your mind as efficently as possible
 
 knowledge: A discrete representation of a response to a specific question. Ex "On what date did Columbus launch his first voyage? (August 3, 1492)

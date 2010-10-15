@@ -6,6 +6,9 @@ all: memory
 memory: $(OBJS)# memory.cpp main.cpp utility.cpp card.cpp
 	g++ $(OBJS) main.cpp -o memory $(FLAGS)
 
+install: memory
+	sudo cp ./memory /usr/bin
+
 make-test: test.cpp
 	#Later actually compile the test code and run it.
 	g++ test.cpp -o test -lncurses
