@@ -19,10 +19,6 @@ void Card::front(std::string id, int offset) {
   db->update("memory.data", id, BSON("next_review" << (int)time(null) + offset));
 }
 
-void Card::setDB(Database* d) {
-  db = d;
-}
-
 Card::Card(const char p[])
   :type(standard), next_review(time(null)), active(true)
 {
@@ -30,14 +26,7 @@ Card::Card(const char p[])
   copy(p,prompt);
 }
 
-Card::~Card() {
-  delete prompt;
-  if (ans) {
-    delete ans;
-  }
-}
-
-Card::Card(const char p[], const char a[], const string u1, const string u2) // To be subclassed
+Card::Card(const char p[], const char a[], const string u1, const string u2)
   :type(sequential), next_review(time(null)), components(), active(false) // Don't automatically activate sequential. Manually activate the first element.
 {
   copy_leak(p,prompt);
@@ -47,6 +36,7 @@ Card::Card(const char p[], const char a[], const string u1, const string u2) // 
 }
 
 Card::Card(BSONObj b, Database* d) {
+  this->db = d;
   BSONElement i;
   b.getObjectID(i);
   id = i.__oid().str();
@@ -225,7 +215,7 @@ void Card::review(Print* pr) {
 int Card::review_msg(char c) {
   if (review_state == 0) {
     p->cls();
-    p->print(ans,true); // Change print.h to make this single line
+    p->print(ans,true);
     p->redraw();
     review_state = 1;
     return 0;
