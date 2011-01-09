@@ -1,3 +1,5 @@
+// First draft refactoring finished 1/1/11.
+
 #include "card.h"
 #include "utility.h"
 #include <fstream>
@@ -5,11 +7,17 @@
 #include <boost/regex.hpp>
 #include "time.h"
 
+// Need subclasses for factory
+#include "basic.h"
+#include "sequential.h"
+#include "poem.h"
+
 using std::ifstream;
 using std::stringstream;
 using std::string;
 
 Database* Card::db;
+Print* Card::p;
 
 void Card::unlock(std::string id) {
   db->update("memory.data", id, BSON("active" << true));
@@ -23,180 +31,76 @@ void Card::setDB(Database* d) {
   db = d;
 }
 
-Card::Card(const char p[])
-  :type(standard), next_review(time(null)), active(true)
+Card::Card() 
+  :type(nil), active(false)
 {
-  prompt = new char[length(p)+1];
-  copy(p,prompt);
 }
 
 Card::~Card() {
-  delete prompt;
+  if (prompt) {
+    delete prompt;
+  }
   if (ans) {
     delete ans;
   }
-}
-
-Card::Card(const char p[], const char a[], const string u1, const string u2) // To be subclassed
-  :type(sequential), next_review(time(null)), components(), active(false) // Don't automatically activate sequential. Manually activate the first element.
-{
-  copy_leak(p,prompt);
-  copy_leak(a,ans);
-  unlock1 = u1;
-  unlock2 = u2;
-}
-
-Card::Card(BSONObj b, Database* d) {
-  BSONElement i;
-  b.getObjectID(i);
-  id = i.__oid().str();
-  review_state = 0;
-  int a = readInt(b,"type");
-  type = a;
-  next_review = readInt(b,"next_review");
-  active = (bool) readInt(b,"active");
-  last_interval = readInt(b,"last_interval");
-  if (last_interval < 0) {
-    last_interval = 0;
-    previous_success = 0;
-  } else {
-    /*    int tmp = readInt(b,"previous_success");
-    if (tmp < 0) { // Must have only gotten 3s. Treat as no previous success
-      previous_success = false;
-    } else {
-      previous_success = (bool) tmp;
-      }*/
-    previous_success = readBool(b, "previous_success");
+  if (user) {
+    delete user;
   }
-  switch (type) {
-  case sequential:
-    unlock1 = b.getStringField("unlock1");
-    unlock2 = b.getStringField("unlock2");
-    // Fall through to standard for rest
+  if (author) {
+    delete author;
+  }
+}
+
+Card* Card::CardFactory(BSONObj b, Database* d) {
+  db = d;
+
+  Card* c;
+  switch (readInt(b,"type")) {
   case standard:
-    prompt = readString(b,"prompt");
-    ans = readString(b,"response");
+    c = new Basic();
+    break;
+  case sequential:
+    c = new Sequential();
     break;
   case poe:
-    prompt = readString(b,"title");
-    author = readString(b,"author");
-    ans = readString(b,"text");
+    c = new Poem();
     break;
-  }    
+  default:
+    log("Unrecognized card type:");
+  };
 
-  if ((type == sequential) || (type == poe)) {
-    if (b.hasField("components")) { // Ignore atomic sequentials
-      BSONObj arr = b.getObjectField("components");
-      components = db->b_arr(arr);
-    }
+  BSONElement i;
+  b.getObjectID(i);
+  c->id = i.__oid().str();
+  c->type = (CardType) readInt(b,"type");
+  c->next_review = readInt(b,"next_review");
+  c->active = (bool) readInt(b,"active");
+  c->last_interval = readInt(b,"last_interval");
+  if (c->last_interval < 0) { // There should be a more elegant way to detect strange or uninitialized last_intervals.
+    c->last_interval = 0;
+    c->previous_success = 0;
+  } else {
+    c->previous_success = readBool(b, "previous_success");
   }
+  c->review_state = 0;
+
+  c->finishRead(b,d);
+  return c;
+}
+
+void Card::finishRead(BSONObj b, Database* d) {
 }
 
 void Card::setComponents(const string id, const vector<string> comp) {
   db->update("memory.data",id,"components",comp);
 }
 
-void Card::response(const char r[]) {
-  ans = new char[length(r)];
-  copy(r,ans);
-}
-// This_id is the id of this card inserted. The return value is the first element to be activated for this block of memory.
-// For a basic flashcard, these are identical.
-string Card::insert(Database* d, char u[], string& this_id) {
-  Card::db = d; // Set the database connection for this Card.
-  copy_leak(u,user);
-  BSONObj a;
-  string decomp;
-  vector<string> subparts;
-  switch(type) {
-  case sequential:
-    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
-    this_id = Card::db->insert("memory.data",a);
-    // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
-    decomp = decompose(this_id,subparts);
-    if (decomp == "") {
-      return this_id;
-    } else {
-      setComponents(this_id, subparts);
-      return decomp;
-    }
-    break;    
-  case standard:  
-    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active);
-    this_id = Card::db->insert("memory.data",a);
-    return this_id;
-    break;
-  case poe:
-    // Don't start reviewing the full poem until entirely memorized.
-    active = false;
-    a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
-    this_id = Card::db->insert("memory.data",a); // Insert and get the id.
-    decomp = decompose(this_id,subparts);
-    setComponents(this_id,subparts);
-    return decomp; // Break down into stanzas and insert them. Should return the first element (already activated by default. Could later do crazy stuff.)
-    break;
-  }  
+std::string Card::insert(Database* db, char user[], std::string& this_id) {
 }
 
 string Card::insert(Database* db, char u[]) {
   string temp;
   return insert(db,u,temp);
-}
-
-// Break a card down into component parts.
-// These will then be memorized in order and after completed, this card will be reviewed.
-// Returned value is the first id.
-// Push the id of each component into parts. Don't touch current contents.
-std::string Card::decompose(string id, vector<string>& parts) {
-  vector<string> stanzas;
-  Card* stanza;
-  
-  Card* line;
-  string stanza_id;
-  switch (type) {
-  case poe:
-    stanzas = split(ans,"\n\n");
-    char p[1000];
-    sprintf(p,("In %s, stanza #" + i_str(stanzas.size()) + ", following:\n%s").c_str(),prompt,stanzas[stanzas.size()-2].c_str());
-    stanza = new Card(p,stanzas[stanzas.size()-1].c_str(),id); // unlock poem when final stanza memorized
-    // Insert the last stanza, which activates the whole poem
-    // Save the id of the first element of the last stanza to be unlocked by the previous stanza
-    id = stanza->insert(db,user,stanza_id);
-    parts.push_back(stanza_id);
-    for (int i = stanzas.size()-2; i > 0; i--) {
-      sprintf(p,("In %s, stanza #" + i_str(i+1) + ", following:\n%s").c_str(),prompt,stanzas[i-1].c_str());
-      length(stanzas[i].c_str());
-      stanza = new Card(p,stanzas[i].c_str(),id);
-      id = stanza->insert(db,user,stanza_id);
-      parts.push_back(stanza_id);
-    }
-    sprintf(p,"In %s, give the first stanza.",prompt);
-    stanza = new Card(p,stanzas[0].c_str(),id);
-    id = stanza->insert(db,user,stanza_id);
-    parts.push_back(stanza_id);
-    // Make the first line active
-    unlock(id);
-    return id;
-    break;
-  case sequential:
-    if (find(ans,'\n') != -1) { // If a sequential answer has multiple lines, break them up
-      vector<string> lines = split(ans,"\n");
-      char p[1000];
-      for (int i = lines.size()-1; i>=0; i--) {
-        sprintf(p,"%s\n\n",prompt);
-        for (int j = 0; j < i; j++) {
-          sprintf(p,"%s%s\n",p,lines[j].c_str());
-        }
-        sprintf(p,"%sWhat is the next line?",p);
-        line = new Card(p,lines[i].c_str(),id);
-        sprintf(p,"%s\n%s",p,lines[lines.size()-i-1].c_str());
-        id = line->insert(db,user);
-        parts.push_back(id);
-      }
-      return id; // Return the id of the first line
-    } // Otherwise, no action
-      return "";
-  } 
 }
 
 void Card::print(Print* p) {
@@ -258,6 +162,8 @@ int Card::grade(char c) {
 
 using mongo::JsonStringFormat;
 // Determine when the next review should be based on the grade
+// We should eventually use more information than just grade and previous_success.
+// We should also consider the actual elapsed time since the last repetition at a minimum.
 void Card::updateTime(int g) {
   int t = time(null);
   int interval;
@@ -273,14 +179,10 @@ void Card::updateTime(int g) {
   case 5:
     interval = 60*60*24*2; break;
   }
+  // If we have repeated success, then lengthen interval.
   if (last_interval != 0) {
-    // If we repeated a category, move further along it. Makes less difference for 1&2, since will usually be earliest possible anyhow.
-    if ((g <= 2) && (!previous_success)) {
-      //interval = last_interval - 60; // If we're failing, just have to repeat as soon as we can. Nothing else to do.
-    } else if ((g >= 4) && (previous_success)) {
-      if (last_interval > interval) {
-        interval = last_interval;
-      }
+    if ((g >= 4) && (previous_success)) {
+      interval = max(last_interval, interval);
       if (g == 4) {
         interval *= 3;
       } else {
@@ -300,20 +202,14 @@ void Card::updateTime(int g) {
   }
   t += interval;
 
-  if ((components.size() > 0) && (g == 1)) {
+  // If we're going to break this card down, don't schedule this card until after the components are reviewed.
+  if ((components.size() > 0) && (g == 1)) { 
     t += components.size();
   }
   db->update("memory.data",id,BSON("next_review" << t << "previous_success" << previous_success << "last_interval" << interval));
 
+  polyUpdate(g);
   // TODO: Abstract below into separate functions. If not significantly reduced in size, consider eventually separate class structure.
-  // If this is a sequential card and a "good" rating was given (>=4), unlock next card.
-  if ((type == sequential) && (g>=4)) {
-    unlock(unlock1); // TODO: If newly unlocked, put at "present" rather than creation time, to prevent overloading.
-    // If there is a second to unlock, do so.
-    if (unlock2 != "") {
-      unlock(unlock2);
-    }
-  }
 
   // If this card is composed of multiple elements, and a grade == 1 was given, move the elements to the front and this slightly behind.
   if (components.size() > 0) {
@@ -349,23 +245,11 @@ void Card::updateTime(int g) {
   }
 }
 
-/* Poems must be plain ASCII text.
-   First line: title
-   Second line: "By $author"
-   Third line: blank
-   Rest: poem, extra newline between stanzas */
-void Card::poem(const char file[]) {
-  type = poe;
-  ifstream f(file);
-  getline(f,prompt);
-  getline(f,author);
-  author += 3; // Skip "By "
-  getline(f,ans); // Skip blank third line
-  
-  // Thanks to: http://stackoverflow.com/questions/116951/using-fstream-to-read-every-character-including-spaces-and-newline
-  stringstream buffer;
-  buffer << f.rdbuf();
-  string contents(buffer.str());
-  ans = new char[buffer.str().size() + 1];
-  copy(contents.c_str(),ans);
+void Card::polyUpdate(int a)
+{
+}
+
+std::string Card::decompose(std::string id,std::vector<std::string>& parts)
+{
+  return (string)0;
 }

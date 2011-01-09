@@ -123,6 +123,12 @@ int min(int a, int b) {
   return b;
 }
 
+int max(int a, int b) {
+  if (a > b)
+    return a;
+  return b;
+}
+
 /* Thanks and glory be to http://oopweb.com/CPP/Documents/CPPHOWTO/Volume/C++Programming-HOWTO-7.html */
 // Modified for multicharacter delimiter
 vector<string> split(const string& str, const string& delimiter = " ")

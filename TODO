@@ -1,0 +1,26 @@
+This file will list, in haphazard order, various things I would like changed about memory.
+
+1. [don't be fooled by the numbers into thinking there will be order] Add spelling cards
+2. collect all the todos thrown about in various places
+3. finish reworking Card class
+4. ???
+5. profit
+6. open source
+7. ???
+8. profit
+
+Rebind windows key to meta in emacs. -- No, maybe figure out how to get wmii/bash/something to stop capturing alt before emacs? or change emacs meta to alt? Test...
+Add ability to create id mnumonics [like entropy 1 [also binds] bone [with implications to any other equalities entropy 1 has]]
+REM: learn how to spell menumonics when near internet again
+
+Change "Is the following correct" to "Would you like to add the following information to your memory" [equiv shorter version] in order to correctly represent program behavior.
+
+Figure out load balancing correctly to learn two different blocks of data at the same time. Current behavior: in any one session, essentially focus on learning one or the other block.
+Desired behavior: ? Thoughts: Perhaps this current system is all right, but should probably have options to mix at random between sequence streams. Later, try to develop more fine-tuned controls. Therefore, re-work structure so
+that program is aware of what data is hidden and how it can be sequentially revealed.
+
+Fix users not actually mattering. Currently, a newly created user has access to all data. This shouldn't be.
+
+Ensure that re-adding duplicate knowledge results in no additional cards.
+
+Add the ability to dump to a flat .txt file.

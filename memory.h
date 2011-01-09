@@ -21,6 +21,25 @@ class Memory {
   void set_printer(Print* p);
 
  private:
+  int (Memory::*cmessagep)(char); // cmessagep points to the character message handler for the current state.
+  int (Memory::*strmessagep)(char[]); // same for strings
+  int nullcmessage(char); // These are the initial values for above. They do nothing but can be called without seg fault.
+  int nullstrmessage(char[]);
+
+  int create_user_str(char[]); // This is one of the above type of message handlers.
+  int which_add_c(char); // Select which method of input to use.
+  int review_c(char); // Handles the review process using substates.
+  int menu_c(char); // This is the main logged-in menu
+  int main_menu_c(char) ; // Login screen shown when starting
+
+  int add_c(char);
+  int add_str(char[]);
+  int poem_c(char);
+  int poem_str(char[]);
+
+  int press_key_c(char);
+  int login_c(char);
+
   void switch_to_main_menu();
   void display_main_menu();
   void switch_to_menu();

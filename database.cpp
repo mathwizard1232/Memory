@@ -50,14 +50,17 @@ vector<const char*> Database::extract(cursor c, char field[]) {
 }
 
 Card* Database::next_review(char* user) {
-  Query q = QUERY("active" << true);
+  Query q = QUERY("active" << true << "user" << user);
   //  q.sort("next_review");
   //  q.sort("_id",-1);
   q.sort(BSON("next_review" << 1 << "_id" << -1));
   cursor c = query("memory.data",q);
   if (c->more()) {
     BSONObj n = c->next();
-    Card* r = new Card(n,this);
+    Card* r = Card::CardFactory(n,this);
+    if (r == null) {
+      log("Bad factory input in Database::next_review");
+    }
     return r;
   } else {
     return null;
@@ -86,8 +89,6 @@ void Database::update(const char* collection, Query q, BSONObj o) {
 void Database::update(const char* collection, string id, BSONObj update) {
   string q = "{\"_id\":ObjectId(\""+id+"\")}";
   string u = "{$set : " + update.jsonString() + "}";
-  log(q);
-  log(u);
   BSONObj o = mongo::fromjson(u);
   c.update(collection,Query(q),o);
 }
