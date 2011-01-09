@@ -1,0 +1,36 @@
+The Golden Age - Aurea Aetas - english translation
+by Ovid translated by Sir Samuel Garth, John Dryden, et. al.
+
+The golden age was first; when Man yet new,
+No rule but uncorrupted reason knew;
+And, with a native bent, did good pursue.
+Unforc'd by punishment, un-aw'd be fear,
+His words were simple, and his soul sincere;
+Needless was written law, where none opprest:
+The law of Man was written in his breast:
+No suppliant crowds before the judge appear'd,
+No court erected yet, nor cause was heard:
+But all was safe, for conscience was their guard.
+The mountain-trees in distant prospect please,
+E're yet the pine descended to the seas:
+E're sails were spread, new oceans to explore:
+And happy mortals, unconcern'd for more,
+Confin'd their wishes to their native shore.
+No walls were yet; nor fense, nor mote, nor mound,
+Nor drum was heard, nor trumpet's angry sound:
+Nor swords were forg'd; but void of care and crime,
+The soft creation slept away their time.
+The teeming Earth, yet guiltless of the plough,
+And unprovok'd, did fruitful stores allow:
+Content with food, which Nature freely bred,
+On wildings and on strawberies they fed;
+Cornels and bramble-berries gave the rest,
+And falling acords furnish'd out a feast.
+The flow'rs unsown, in fields and meadows reign'd:
+And Western winds immportal spring maintain'd.
+In following years, the bearded corn ensu'd
+From Earth unask'd, nor was that Earth renew'd.
+From veins of vallies, milk and nectar broke;
+And honey sweating through the pores of oak.
+
+Hack so this won't segfault.
