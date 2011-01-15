@@ -43,6 +43,11 @@ class Database {
   vector<std::string> b_arr(BSONObj arr); // Convert a BSON array to a vector
   BSONObj get(const char* collection, std::string id);
   int getInt(const char* collection, std::string id, const char* field); // Read the int value from the given field in given obj
+  //  vector<BSONObj> getAll(const char* user);
+
+  vector<Card*> getCards(const char* user);
+  
+  void dump(ofstream &o, const char* user);
  private:
   // Run a given query
   cursor query(const char collection[], 
@@ -63,5 +68,6 @@ class Database {
 int readInt(BSONObj b, const char* field);
 char* readString(BSONObj, const char* f);
 bool readBool(BSONObj, const char*);
+std::string readId(BSONObj);
 
 #endif

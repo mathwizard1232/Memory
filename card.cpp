@@ -67,11 +67,14 @@ Card* Card::CardFactory(BSONObj b, Database* d) {
     break;
   default:
     log("Unrecognized card type:");
+    1/0;
+    //    log(b);
   };
 
-  BSONElement i;
-  b.getObjectID(i);
-  c->id = i.__oid().str();
+  //  BSONElement i;
+  //  b.getObjectID(i);
+  //  c->id = i.__oid().str();
+  c->id = readId(b);
   c->type = (CardType) readInt(b,"type");
   c->next_review = readInt(b,"next_review");
   c->active = (bool) readInt(b,"active");
@@ -252,4 +255,13 @@ void Card::polyUpdate(int a)
 std::string Card::decompose(std::string id,std::vector<std::string>& parts)
 {
   return (string)0;
+}
+
+using std::ofstream;
+using std::endl;
+void Card::write(ofstream &o) {
+  o << "q: ";
+  o << prompt;
+  o << endl;
+  o << "a: " << ans << endl;
 }

@@ -24,3 +24,6 @@ Fix users not actually mattering. Currently, a newly created user has access to 
 Ensure that re-adding duplicate knowledge results in no additional cards.
 
 Add the ability to dump to a flat .txt file.
+
+If you create a new user, any data added is invalid on the first time through?
+If there are no users, login screen only allows quitting.

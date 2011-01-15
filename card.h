@@ -16,6 +16,9 @@
 #include <vector>
 #include "utility.h"
 
+#include <iostream>
+#include <fstream>
+
 using mongo::BSONElement;
 
 class Card {
@@ -35,6 +38,9 @@ class Card {
   // Displays this card.
   // This should be made virtual.
   void print(Print* p);
+  
+  // Complete file dump. Next, write the read-in system.
+  virtual void write(std::ofstream &);
 
   // Starts the review cycle.
   void review(Print* p);

@@ -51,8 +51,6 @@ vector<const char*> Database::extract(cursor c, char field[]) {
 
 Card* Database::next_review(char* user) {
   Query q = QUERY("active" << true << "user" << user);
-  //  q.sort("next_review");
-  //  q.sort("_id",-1);
   q.sort(BSON("next_review" << 1 << "_id" << -1));
   cursor c = query("memory.data",q);
   if (c->more()) {
@@ -103,6 +101,12 @@ int Database::getInt(const char* collection, string id, const char* field) {
   return readInt(get(collection,id),field);
 }
 
+std::string readId(BSONObj b) {
+  BSONElement i;
+  b.getObjectID(i);
+  return i.__oid().str();
+}
+
 void Database::update(const char* collection, BSONElement& e, BSONObj change) {
   mongo::OID id = e.__oid();
   update(collection, id.str(), change);
@@ -126,6 +130,52 @@ vector<string> Database::b_arr(BSONObj arr) {
   while (arr.hasField(i_cstr(index))) {
     out.push_back(arr.getStringField(i_cstr(index)));
     index++;
+  }
+  return out;
+}
+
+/*vector<BSONObj> Database::getAll(const char* user) {
+  Query q = QUERY("active" << true << "user" << user);
+  q.sort(BSON("_id" << 1));
+  cursor c = query("memory.data",q);
+  
+  vector<BSONObj> out;
+  while (c->more()) {
+    BSONObj n = c->next();
+    out.push_back(n);
+  }
+
+  return out;
+}
+
+void Database::dump(ofstream &o, const char* user) {
+  vector<BSONObj> all;
+  all = getAll(user);
+  for (int i = 0; i < all.size(); i++) {
+    try {
+      Card* r = Card::CardFactory(all[i],this);
+    } catch (...) {
+      log("Exception caught.");
+    }
+    //    r->write(o);
+  }
+  }*/ // code above does not work mysteriously
+
+void Database::dump(ofstream &o, const char* user) {
+  vector<Card*> all = getCards(user);
+  for (int i = 0; i < all.size(); i++) {
+    all[i]->write(o);
+  }
+}
+
+vector<Card*> Database::getCards(const char* user) {
+  Query q = QUERY("active" << true << "user" << user);
+  q.sort(BSON("_id" << 1));
+  cursor c = query("memory.data",q);
+  
+  vector<Card*> out;
+  while (c->more()) {
+    out.push_back(Card::CardFactory(c->next(),this));
   }
   return out;
 }

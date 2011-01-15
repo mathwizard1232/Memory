@@ -124,6 +124,11 @@ int Memory::menu_c(char c) {
     cmessagep = &Memory::review_c;
     substate = 0;
     review();
+  } else if (charcmp(c,'m')) {
+    state = dynamic;
+    cmessagep = &Memory::manage_c;
+    substate = 0;
+    manage();
   }
   return 0;
 }
@@ -345,4 +350,25 @@ int Memory::login() {
 void Memory::new_user() {
   p->cls();
   p->print("What would you like to be called? ");
+}
+
+void Memory::manage() {
+  p->cls();
+  p->print("(D)ump all data to a flat file.");
+  p->print("(B)ack to the main menu.");
+}
+
+int Memory::manage_c(char c) {
+  switch (tolower(c)) {
+  case 'd': dump(); break;
+  case 'b': switch_to_menu(); break;
+  }
+  return 0;
+}
+
+void Memory::dump() {
+  ofstream out;
+  out.open("dump.txt");
+  db.dump(out,user);
+  //  db.getCards(user);
 }

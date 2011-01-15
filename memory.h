@@ -31,6 +31,7 @@ class Memory {
   int review_c(char); // Handles the review process using substates.
   int menu_c(char); // This is the main logged-in menu
   int main_menu_c(char) ; // Login screen shown when starting
+  int manage_c(char); // Managing knowledge
 
   int add_c(char);
   int add_str(char[]);
@@ -50,6 +51,9 @@ class Memory {
   void poem();
 
   void review();
+
+  void manage();
+  void dump();
 
   void continue_at(int stat);
   void resume();
