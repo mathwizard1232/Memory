@@ -34,6 +34,7 @@ void Card::setDB(Database* d) {
 Card::Card() 
   :type(nil), active(false)
 {
+  cat = Category::all();
 }
 
 Card::~Card() {
@@ -87,6 +88,10 @@ Card* Card::CardFactory(BSONObj b, Database* d) {
   }
   c->review_state = 0;
 
+  if (b.hasField("category")) {
+    c->cat = Category::find(readString(b,"category"));
+  }
+
   c->finishRead(b,d);
   return c;
 }
@@ -104,6 +109,10 @@ std::string Card::insert(Database* db, char user[], std::string& this_id) {
 string Card::insert(Database* db, char u[]) {
   string temp;
   return insert(db,u,temp);
+}
+
+void Card::setCategory(Category* c) {
+  cat = c;
 }
 
 void Card::print(Print* p) {
@@ -124,9 +133,17 @@ void Card::print(Print* p) {
 void Card::review(Print* pr) {
   p = pr;
   p->cls();
-  p->print(prompt,true);
-  p->redraw();
+  // Add category suffix
+  char* a = new char[length(prompt) + cat->getSuffix().length() + 2];
+  sprintf(a,"%s %s",prompt,cat->getSuffix().c_str());
+  log("Reviewing card.");
+  log(id);
+  log(cat->getSuffix());
+  //  p->print(prompt,true);
+  p->print(a);
+  //  p->redraw();
   review_state = 0;
+  delete a;
 }
 
 int Card::review_msg(char c) {

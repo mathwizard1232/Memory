@@ -12,6 +12,7 @@
 
 #include "print.h" // Output abstraction
 #include "database.h" // Database weak abstraction, mongo/bson should be excised here eventually
+#include "categories.h" // Representation for the knowledge hierarchy.
 #include <string>
 #include <vector>
 #include "utility.h"
@@ -38,6 +39,8 @@ class Card {
   // Displays this card.
   // This should be made virtual.
   void print(Print* p);
+
+  void setCategory(Category* c);
   
   // Complete file dump. Next, write the read-in system.
   virtual void write(std::ofstream &);
@@ -68,6 +71,7 @@ class Card {
   static Print* p;
 
   std::string id;
+  Category* cat; // How this piece of knowledge is categorized.
 
   char* prompt;
   char* ans;  

@@ -2,9 +2,12 @@
 #include "utility.h"
 
 // Subtypes of cards
+// note: so far sequential is only triggered by poem
 #include "basic.h"
 #include "poem.h"
 
+
+// State is now hard-wired to dynamic, anything else is an error.
 enum status {main_menu = 0, // Initial screen 
              logi = 1, // Typing more than one character for login, >= 10 users
              menu = 2, // Logged in main menu
@@ -30,6 +33,9 @@ int Memory::nullstrmessage(char c[]) {
 Memory::Memory()
   :started(false),cmessagep(&Memory::nullcmessage),strmessagep(&Memory::nullstrmessage)
 {  
+  //  
+  cat = Category::all();
+  //
 }
 
 void Memory::set_printer(Print* in) {
@@ -51,7 +57,13 @@ void Memory::switch_to_main_menu() {
   display_main_menu();
 }
 
+bool start = false;
 void Memory::display_menu() {
+  if (!start) { // For some reason, this crashes from inside Memory constructor.
+    Category::load(&db);
+    start == true;
+  }
+
   if (!started) {
     char out[200];
     sprintf(out,"Welcome, %s",user);
@@ -125,9 +137,7 @@ int Memory::menu_c(char c) {
     substate = 0;
     review();
   } else if (charcmp(c,'m')) {
-    state = dynamic;
     cmessagep = &Memory::manage_c;
-    substate = 0;
     manage();
   }
   return 0;
@@ -282,6 +292,7 @@ int Memory::add_str(char str[]) {
       return 1;
     } else {
       card = new Basic(str);
+      card->setCategory(cat);
       add();
       return 0;
     }
@@ -295,6 +306,7 @@ int Memory::add_str(char str[]) {
 
 int Memory::poem_str(char str[]) {
   card = new Poem(str);
+  card->setCategory(cat);
   poem();
   return 1;
 }
@@ -354,6 +366,7 @@ void Memory::new_user() {
 
 void Memory::manage() {
   p->cls();
+  p->print("(C)ategories");
   p->print("(D)ump all data to a flat file.");
   p->print("(B)ack to the main menu.");
 }
@@ -362,8 +375,86 @@ int Memory::manage_c(char c) {
   switch (tolower(c)) {
   case 'd': dump(); break;
   case 'b': switch_to_menu(); break;
+  case 'c': cmessagep = &Memory::categories_c; strmessagep = &Memory::categories_str; categories(); break;
   }
   return 0;
+}
+
+
+void Memory::categories() {
+
+  p->cls();
+  p->printf("Current category: %s",cat->toString().c_str());
+  if (!cat->rootp()) {
+    p->print("Move to (p)arent");
+  }
+  // List children
+  vector<Category*> children = cat->getChildren();
+  if (children.size() > 10) {
+    log("Memory::categories problem; numerical input must now be fixed.");
+    p->print("Numerical input greater than 10 not yet implemented. Please contact the author.");
+  }
+  vector<std::string> names;
+  for (int i = 0; i < children.size(); i++) {
+    names.push_back(children[i]->toString());
+  }
+  p->list(names);    
+  
+  p->print("Make new (c)hild");
+  p->print("");
+  p->printf("Current suffix: %s",cat->getSuffix().c_str());
+  p->print("(N)ew suffix");
+  p->print("");
+  p->print("(B)ack");
+}
+
+int Memory::categories_c(char c) {
+  switch (tolower(c)) {
+  case 'p': cat = cat->getParent(); categories(); break;
+  case 'c': substate = 1; child(); return 1; // Go to a long input, yet to be coded.
+  case 'n': substate = 2; suffix(); return 1; // ""
+  case 'b': cmessagep = &Memory::manage_c; manage(); break;
+  }
+
+  if ((c >= '0') && (c <= '9')) {
+    int i = (int)c - (int)'0';
+    if (i == 0)
+      i = 10;
+
+    vector<Category*> children = cat->getChildren();
+    if (i <= children.size()) {
+      cat = children[i-1];
+      categories();
+    }
+  }
+
+  return 0;
+}
+
+void Memory::child() {
+  p->cls();
+  p->print("Enter the name of the new child category (blank to cancel): ");
+}
+
+void Memory::suffix() {
+  p->cls();
+  p->print("Enter the new suffix for this category: ");
+}
+
+int Memory::categories_str(char* c) {
+  if (substate == 1) {
+    // Create the new child
+    if (c != "") {
+      cat = cat->makeChild(c);
+      cat->insert(&db);
+    }
+  } else if (substate == 2) {
+    // Change the suffix
+    cat->setSuffix(c);
+    cat->update(&db);
+  }
+  categories();
+  return 1;
 }
 
 void Memory::dump() {

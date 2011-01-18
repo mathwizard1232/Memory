@@ -5,6 +5,10 @@
 #include "database.h"
 #include "card.h"
 
+// Need to be loaded from the database during initialization
+// We trigger that during Memory construction.
+#include "categories.h"
+
 class Memory {
  public:
   Memory();
@@ -32,6 +36,12 @@ class Memory {
   int menu_c(char); // This is the main logged-in menu
   int main_menu_c(char) ; // Login screen shown when starting
   int manage_c(char); // Managing knowledge
+
+  void categories(); // These functions manage the interface for categories.
+  int categories_c(char);
+  int categories_str(char[]);
+  void child();
+  void suffix();
 
   int add_c(char);
   int add_str(char[]);
@@ -76,6 +86,8 @@ class Memory {
 
   // Current user
   char* user;
+  Category* cat; // Current category
+
 
   // True when user has been greeted.
   bool started;

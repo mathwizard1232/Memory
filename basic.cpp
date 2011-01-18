@@ -25,7 +25,7 @@ std::string Basic::insert(Database* d, char u[], std::string& this_id) {
   copy_leak(u,user);
   BSONObj a;
   log(user);
-  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active);
+  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << cat->toString());
   this_id = Card::db->insert("memory.data",a);
   return this_id;
 }

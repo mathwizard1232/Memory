@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <vector>
+#include <string>
 using std::ofstream;
 using std::vector;
 
@@ -21,6 +22,7 @@ class Print {
 
   // Add the following sequential elements preceeded by #.
   void list(const vector<const char*> l);
+  void list(const vector<std::string> l);
 
   void redraw(int s = 0); // which screen to print
 

@@ -27,3 +27,7 @@ Add the ability to dump to a flat .txt file.
 
 If you create a new user, any data added is invalid on the first time through?
 If there are no users, login screen only allows quitting.
+
+Add the ability to delete information/users.
+
+Make it so that each user can maintain their own category hierarchy.

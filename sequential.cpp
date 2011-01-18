@@ -38,6 +38,7 @@ std::string Sequential::decompose(string id, vector<string>& parts) {
         }
         sprintf(p,"%sWhat is the next line?",p);
         line = new Sequential(p,lines[i].c_str(),id);
+        line->setCategory(cat);
         sprintf(p,"%s\n%s",p,lines[lines.size()-i-1].c_str());
         id = line->insert(db,user);
         parts.push_back(id);
@@ -56,7 +57,7 @@ string Sequential::insert(Database* d, char u[], string& this_id) {
   string decomp;
   vector<string> subparts;
 
-    a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2);
+  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "unlock1" << unlock1 << "unlock2" << unlock2 << "category" << cat->toString());
     this_id = Card::db->insert("memory.data",a);
     // If this can be decomposed, do so. Then return the first line to start the unlocking. Otherwise, simply return the id of the insert.
     decomp = decompose(this_id,subparts);

@@ -160,3 +160,11 @@ void Print::list(vector<const char*> l) {
     print(out);
   }
 }
+
+void Print::list(vector<string> l) {
+  vector<const char*> convert;
+  for (int i = 0; i < l.size(); i++) {
+    convert.push_back(l[i].c_str());
+  }
+  list(convert);
+}

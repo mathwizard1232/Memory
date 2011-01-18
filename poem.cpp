@@ -53,6 +53,7 @@ string Poem::decompose(string id, vector<string>& parts) {
       sprintf(p,("In %s, stanza #" + i_str(i+1) + ", following:\n%s").c_str(),prompt,stanzas[i-1].c_str());
       length(stanzas[i].c_str());
       stanza = new Sequential(p,stanzas[i].c_str(),id);
+      stanza->setCategory(cat);
       id = stanza->insert(db,user,stanza_id);
       parts.push_back(stanza_id);
     }
@@ -76,7 +77,7 @@ string Poem::insert(Database* d, char u[], string& this_id) {
 
     // Don't start reviewing the full poem until entirely memorized.
     active = false;
-    a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active);
+    a = BSON("user" << user << "title" << prompt << "author" << author << "text" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << cat->toString());
     this_id = Card::db->insert("memory.data",a); // Insert and get the id.
     decomp = decompose(this_id,subparts);
     setComponents(this_id,subparts);

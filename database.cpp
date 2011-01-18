@@ -79,16 +79,20 @@ bool readBool(BSONObj b, const char* f) {
   return b.getBoolField(f);
 }
 
-void Database::update(const char* collection, Query q, BSONObj o) {
+void Database::directUpdate(const char* collection, Query q, BSONObj o) {
   c.update(collection,q,o);
 }
 
 // Atomicly update only given fields
-void Database::update(const char* collection, string id, BSONObj update) {
+void Database::update(const char* collection, string id, BSONObj change) {
   string q = "{\"_id\":ObjectId(\""+id+"\")}";
+  update(collection, Query(q), change);
+}
+
+void Database::update(const char* collection, Query q, BSONObj update) {
   string u = "{$set : " + update.jsonString() + "}";
   BSONObj o = mongo::fromjson(u);
-  c.update(collection,Query(q),o);
+  directUpdate(collection,q,o);
 }
 
 BSONObj Database::get(const char* collection, string id) {

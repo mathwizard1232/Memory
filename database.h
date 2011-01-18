@@ -7,9 +7,8 @@
 #include <mongo/client/dbclient.h>
 #include <vector>
 #include <string>
+#include <fstream>
 class Card;
-//#include "card.h"
-//using namespace mongo; //bad form
 
 using mongo::Query;
 using mongo::BSONObj;
@@ -34,8 +33,9 @@ class Database {
 
   // Returns the card which is to be reviewed next for the given user.
   Card* next_review(char* user);
-  void update(const char* collection, Query q, BSONObj o);
+  void directUpdate(const char* collection, Query q, BSONObj o); // wipes everything else currently in object. Use atomic updates below.
   // Atomic update rather than entire erase.
+  void update(const char* collection, Query q, BSONObj o);
   void update(const char* collection, std::string id, BSONObj up);
   void update(const char* collection, BSONElement& e, BSONObj o);
   void update(const char* collection, std::string id, const char* field, vector<std::string> data);
@@ -47,11 +47,15 @@ class Database {
 
   vector<Card*> getCards(const char* user);
   
-  void dump(ofstream &o, const char* user);
- private:
+  void dump(std::ofstream &o, const char* user);
+
+  // Made public for category::load
+  // return to private eventually?
   // Run a given query
   cursor query(const char collection[], 
                const Query q);
+
+ private:
 
   // Return the full collection
   cursor query(const char collection[]);
