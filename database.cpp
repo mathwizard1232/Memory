@@ -40,11 +40,15 @@ cursor Database::query(const char coll[]) {
   return query(coll, BSONObj());
 }
 
+// Allocates memory. User must ultimately free this to avoid a leak.
 vector<const char*> Database::extract(cursor c, char field[]) {
   vector<const char*> results;
   while (c->more()) {
     BSONObj p = c->next();
-    results.push_back(p.getStringField(field));
+    const char* curr = p.getStringField(field);
+    char* temp = new char[length(curr)];
+    copy(curr, temp);
+    results.push_back(temp);
   }
   return results;
 }

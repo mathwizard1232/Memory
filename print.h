@@ -12,8 +12,10 @@ class Print {
   Print();
   ~Print();
 
+  void newline(); // Prints a newline
+
   // Add the given line to the buffer to output.
-  // Note: by default Print adds a '\n' between each output
+  // Note: by default Print does (not (?)) add a '\n' between each output // This needs testing / examination.
   void print(const char str[], bool no_refresh = false);
   //  void print(const char str[]);
   void printf(const char format[],const char arg[], bool no_refresh = false);

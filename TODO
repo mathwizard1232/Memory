@@ -31,3 +31,15 @@ If there are no users, login screen only allows quitting.
 Add the ability to delete information/users.
 
 Make it so that each user can maintain their own category hierarchy.
+
+Switch to unicode so that ç won't break the cards.
+
+Add flipped cards & ability for them to be in different categories.
+
+Rework categories to seamlessly be included in the add sequence.
+
+Refactor code sequence used to create a new user input/screen output/data action tuple in the program.
+
+UNICODE SO A SIMPLE é DOESN'T BREAK!!
+
+Okay, so I'm getting these "repeats". This is where I grade a card a success, but it immediately reappears as the next card. Make sure all writes have finished before reading the next card.

@@ -1,6 +1,7 @@
 #include "utility.h"
 #include <string>
 #include <fstream>
+#include <stdlib.h>
 
 using std::istream;
 using std::ofstream;
@@ -164,4 +165,27 @@ string i_str(int i) {
 
 const char* i_cstr(int i) {
   return i_str(i).c_str();
+}
+
+bool full_line(char str[]) {
+  /*  if (str[0] == '\0')
+    return false;
+  if (str[0] == '\n')
+    return true;
+
+    return full_line(str[1]);*/ // Ah, for tail-end recursion optimizing c++ compilers.
+
+  int i = 0;
+  while (str[i] != '\0') {
+    if (str[i] == '\n') {
+      return true;
+    }
+
+    i++;
+  }
+  return false;
+}
+
+int cstr_i(char str[]) {
+  return atoi(str);
 }

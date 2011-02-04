@@ -8,7 +8,7 @@
 
 
 // State is now hard-wired to dynamic, anything else is an error.
-enum status {main_menu = 0, // Initial screen 
+/*enum status {main_menu = 0, // Initial screen 
              logi = 1, // Typing more than one character for login, >= 10 users
              menu = 2, // Logged in main menu
              press_key = 3, // Waiting for keypress to continue
@@ -18,7 +18,8 @@ enum status {main_menu = 0, // Initial screen
              which_ad = 7, // selecting add method
              revie = 8, // review a card
              dynamic = 9 // use the message pointers rather than state
-};
+             };*/
+enum status {main_menu,menu,dynamic}; // Slowly refactoring out all mention of above.
 
 // These functions are for when there is no current state or when the current message function,
 // rather than using the dynamic system are using the current single function.
@@ -50,18 +51,18 @@ void Memory::display_main_menu() {
 }
 
 void Memory::switch_to_main_menu() {
-  //  state = main_menu;
-  state = dynamic;
   cmessagep = &Memory::main_menu_c;
   p->cls();
   display_main_menu();
 }
 
-bool start = false;
+static bool start = false;
 void Memory::display_menu() {
   if (!start) { // For some reason, this crashes from inside Memory constructor.
+    log("Starting to load categories.");
     Category::load(&db);
-    start == true;
+    log("Categories loaded.");
+    start = true;
   }
 
   if (!started) {
@@ -77,8 +78,6 @@ void Memory::display_menu() {
 }
 
 void Memory::switch_to_menu() {
-  //  state = menu;
-  state = dynamic;
   cmessagep = &Memory::menu_c;
   p->cls();
   display_menu();
@@ -93,18 +92,18 @@ int Memory::create_user_str(char str[]) {
 
 int Memory::which_add_c(char c) {
   if (charcmp(c,'s')) {
-    //state = ad;
     cmessagep = &Memory::add_c;
     strmessagep = &Memory::add_str;
     substate = 0;
     add();
   } else if (charcmp(c,'p')) {
-    //state = poe;
     cmessagep = &Memory::poem_c;
     strmessagep = &Memory::poem_str;
     poem();
+  } else if (charcmp(c,'b')) {
+    switch_to_menu();
+    return 0;
   }
-  state = dynamic;
   return 1;
 }
 
@@ -124,15 +123,11 @@ int Memory::review_c(char c) {
 int Memory::menu_c(char c) {
   if (charcmp(c,'a')) {
     // Start adding a new piece of information
-    //state = which_ad;
     cmessagep = &Memory::which_add_c;
-    state = dynamic;
     substate = 0;
     //add();
     which_add();
   } else if (charcmp(c,'r')) {
-    //        state = revie;
-    state = dynamic;
     cmessagep = &Memory::review_c;
     substate = 0;
     review();
@@ -150,7 +145,6 @@ int Memory::main_menu_c(char c) {
   else if (charcmp(c,'n')) {
     strmessagep = &Memory::create_user_str;
     new_user();
-    state = dynamic;
     return 1;
   }
   return 0; // If there is an invalid entry, wait for a valid one.
@@ -177,8 +171,6 @@ int Memory::poem_c(char c) {
       card->insert(&db,user);
       p->cls();
       p->print("Poem added.");
-      //state = menu;
-      state = dynamic;
       cmessagep = &Memory::menu_c;
       display_menu();
     } else {
@@ -211,6 +203,25 @@ int Memory::login_c(char c) {
   return 0;
 }
 
+int Memory::login_str(char str[]) {
+  int id = cstr_i(str);
+  log("Logging in as user:");
+  log(id);
+  log((int) users.size());
+  if ((id < 1) || (id > users.size())) {
+    // Invalid input. Go back to the main menu.
+    switch_to_main_menu();
+  } else {
+    log("logging in as:");
+    user = new char[length((char*) users[id-1])+1];
+    copy((char*) users[id-1], user);
+    switch_to_menu();
+    log(user);
+  }
+  log("done");
+  return 1;
+}
+
 // If 1 is returned, takes in a string next.
 // If 0, continues to take characters.
 // Create new message functions. Then message will simply call the relevant function.
@@ -229,8 +240,6 @@ int Memory::message(char c) {
 void Memory::review() {
   card = db.next_review(user);
   if (card == null) {
-    //state = menu;
-    state = dynamic;
     cmessagep = &Memory::menu_c;
     p->print("Please add a flashcard before reviewing.");
   }
@@ -260,9 +269,10 @@ void Memory::poem() {
 
 void Memory::which_add() {
   p->cls();
-  p->print("Select method of input.");
-  p->print("(S)imple flashcard");
-  p->print("(P)oem from file");
+  p->print("Select method of input.",true);
+  p->print("(S)imple flashcard",true);
+  p->print("(P)oem from file",true);
+  p->print("(B)ack");
 }
 
 void Memory::add() {
@@ -316,8 +326,6 @@ int Memory::message(char str[]) {
 }
 
 void Memory::continue_at(int state) {
-  //  state = press_key;
-  state = dynamic;
   cmessagep = &Memory::press_key_c;
   resume_state = state;
   p->print("Press 'q' to exit or any other key to continue.");
@@ -339,7 +347,8 @@ int Memory::login() {
   users = db.users();
 
   cmessagep = &Memory::login_c;
-  state = dynamic;
+  strmessagep = &Memory::login_str;
+
   p->cls();
   if (users.size() == 0) {
     p->print("Please create a user first.");
@@ -347,14 +356,17 @@ int Memory::login() {
     return 0;
   }
   else if (users.size() >= 10) {
-    p->print("Multi-character login now needs to be coded. ~1 hour. Please pay the original programmer if you would like this done.");
-    //    state = logi;
+    //p->print("Multi-character login now needs to be coded. ~1 hour. Please pay the original programmer if you would like this done.");
+    //    p->print("
+    p->print("Please select from the following users and press enter when done.");
+    p->list(users);
+    //    p->newline();
+    p->print("\n ");
     return 1;
   }
   else {
     p->print("Please select from the following users or press 'b' to return to the main menu.");
     p->list(users);
-    //    state = logi;
     return 0;
   }
 }

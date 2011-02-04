@@ -33,6 +33,10 @@ Print::~Print()
   //ofstream file("closefile.txt");
 }
 
+void Print::newline() {
+  print("\n\n");
+}
+
 void Print::printf(const char form[], const char arg[], bool no_refresh) {
   char out[length(form)+length(arg)];
   sprintf(out,form,arg);

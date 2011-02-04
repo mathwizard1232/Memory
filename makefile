@@ -7,6 +7,12 @@ all: memory
 memory: $(OBJS)
 	g++ -g $(OBJS) main.cpp -o memory $(LIBS)
 
+run: all
+	ifconfig eth0 0.0.0.0
+	m0 >/dev/null &
+	sleep 2
+	./memory
+
 install: memory
 	sudo cp ./memory /usr/bin
 

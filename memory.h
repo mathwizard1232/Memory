@@ -50,6 +50,7 @@ class Memory {
 
   int press_key_c(char);
   int login_c(char);
+  int login_str(char[]);
 
   void switch_to_main_menu();
   void display_main_menu();
@@ -97,7 +98,7 @@ class Memory {
 
   // current state of the system
   // 0 means main menu
-  int state;
+  //  int state; // refactored out. Whoo!
 
   // If inside a complex function (like add), keeps track of internal status
   int substate;
