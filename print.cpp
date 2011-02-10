@@ -20,6 +20,9 @@ Print::Print()
   //  ^ useful if we need to react after a given time whether or not user replies.
   //  curs_set(0);
   //  noecho();
+  
+  setlocale(LC_ALL,""); // Working on unicode support here.
+
   initscr(); // Start curses
   cbreak(); // Don't wait until newline for input
   noecho(); // If going to display, will do it manually
@@ -65,9 +68,8 @@ void Print::print(const char in[], bool no_refresh)
     if (this->lines < this->allocated)
       this->output[this->lines++] = str;
     else {
-      // Unable to increase allocation. This is not normal. Crash.
-      int a = 0;
-      1/a;
+      // Unable to increase allocation. This is not normal.
+      perror("Unable to allocate more lines in print.");
     }
   }
   
@@ -82,6 +84,10 @@ void Print::print(const char in[], bool no_refresh)
 void Print::redraw(int s) // screen to print
 {
   clear();
+  //  wchar a = L'\u00E1';
+  //  addch(a);
+  //addwstr(a);
+  //  addstr(a);
   screen = s;
   int maxwidth = 0;
 
@@ -102,20 +108,23 @@ void Print::redraw(int s) // screen to print
 
   int offset = screen*(LINES-2);
   for (int i = 0; i < min(this->lines-offset,LINES-2); i++) {
-    int pos = 0;
+    /*    int pos = 0;
     while (this->output[i+offset][pos] != '\0') {
       mvaddch(skip + i + 1, padding + pos + 1, this->output[i+offset][pos]);
       pos++;
-    }
+      }*/
+    // To allow curs to account for utf-8 encodings, using str rather than ch.
+    mvaddstr(skip + i + 1, padding + 1, this->output[i+offset]);
   }
   // if more screens, prompt
   if (this->lines > offset + LINES - 2) {
     const char a[] = "Press space to see more";
     int pos = 0;
-    while (a[pos] != '\0') {
+    /*    while (a[pos] != '\0') {
       mvaddch(LINES-1, padding+pos+1, a[pos]);
       pos++;
-    }
+      }*/
+    mvaddstr(LINES-1, padding+1, a);
   }
   refresh();
 }

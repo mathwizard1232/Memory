@@ -45,7 +45,7 @@ void Memory::set_printer(Print* in) {
 }
 
 void Memory::display_main_menu() {
-  p->print("Welcome to memory.");
+  p->print("Welcome to memory.élan");
   p->print("(L)ogin");
   p->print("Create a (n)ew user");
 }

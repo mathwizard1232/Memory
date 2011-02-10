@@ -16,6 +16,7 @@ Memory m;
 int main(int argc, char* argv[])
 {
   log();
+  //  log(L"élan");
   Print out = Print();
 
   m.set_printer(&out);
@@ -23,14 +24,16 @@ int main(int argc, char* argv[])
   char str[80];
 
   bool mode = false; // If true, take in string. If false, take in char.
-  while (true) {
-    if (mode) {
+  while (true) { // String input
+    if (mode) { 
       echo();
+      curs_set(1);
       getstr(str);
       noecho();
+      curs_set(0);
       mode = mode ^ m.message(str); // If message returns != 0, then make mode false
     }
-    else {
+    else { // Character input
       c = getch();
       clrtoeol();
     

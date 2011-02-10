@@ -1,3 +1,6 @@
+#include <wchar.h>
+typedef wchar_t wchar;
+
 int length(const char* str);
 int copy(const char* in, char* out);
 void copy_leak(const char* in, char*& out);

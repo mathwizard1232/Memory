@@ -43,3 +43,6 @@ Refactor code sequence used to create a new user input/screen output/data action
 UNICODE SO A SIMPLE é DOESN'T BREAK!!
 
 Okay, so I'm getting these "repeats". This is where I grade a card a success, but it immediately reappears as the next card. Make sure all writes have finished before reading the next card.
+^diagnosed from the logs. I'm getting integer overflow. A card is successfully reviewed so many times that multiplying is no longer a reasonable rule. Enforce a maximum value of 5 years for intervals.
+
+Basic flashcard breaks when adding a multi-line response. (seg fault)
