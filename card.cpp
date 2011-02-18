@@ -68,7 +68,8 @@ Card* Card::CardFactory(BSONObj b, Database* d) {
     break;
   default:
     log("Unrecognized card type:");
-    1/0;
+    //1/0; // Bad form
+    perror("Unrecognized card type.");
     //    log(b);
   };
 
@@ -103,7 +104,9 @@ void Card::setComponents(const string id, const vector<string> comp) {
   db->update("memory.data",id,"components",comp);
 }
 
+// Made virtual since always overridden.
 std::string Card::insert(Database* db, char user[], std::string& this_id) {
+  perror("Card::insert should not be called; only the overridden descendents' versions.");
 }
 
 string Card::insert(Database* db, char u[]) {
@@ -180,13 +183,26 @@ int Card::grade(char c) {
   return (a == -1) + 1;
 }
 
+// 2/11/11: Refactoring this function is my next priority. Functional change will be preventing time overflows; aesthetically will
+// work on making this two or three functions in the end and more consistent flow.
 using mongo::JsonStringFormat;
 // Determine when the next review should be based on the grade
 // We should eventually use more information than just grade and previous_success.
 // We should also consider the actual elapsed time since the last repetition at a minimum.
 void Card::updateTime(int g) {
-  int t = time(null);
-  int interval;
+  double t = time(null); // Retrieve the current time. Use a double to deal with y2k-esque overflow.
+  double interval;
+
+  const int MIN = 60;
+  const int HOUR = 60 * MIN;
+  const int DAY = HOUR * 24;
+  const int YEAR = DAY * 365;
+
+  // Select the "base" time interval for the given grade.
+  // We will consider a 3 as suggesting another look to strengthen the knowledge.
+  // 1/2 suggests not yet learned, review ASAP, essentially in arbitrary order.
+  // 4/5 The card has been learned. If a 4, review again in 10 hours. If 5, 2 days.
+  // These are arbitrary values which seemed reasonable.
   switch (g) {
   case 1:
     interval = 10; break;
@@ -199,17 +215,21 @@ void Card::updateTime(int g) {
   case 5:
     interval = 60*60*24*2; break;
   }
+
   // If we have repeated success, then lengthen interval.
-  if (last_interval != 0) {
-    if ((g >= 4) && (previous_success)) {
-      interval = max(last_interval, interval);
+  if (last_interval != 0) { // If we have previously worked with this card
+    if ((g >= 4) && (previous_success)) { // and we know it now and knew it last
+      interval = max(last_interval, interval); // then take the previous interval (or default if higher)
       if (g == 4) {
-        interval *= 3;
+        interval *= 3; // and lengthen it. More for a 5 than a 4, but significantly for both.
       } else {
         interval *= 6;
       }
     }
   }
+
+  // Now, ensure that the interval is no longer than 2 years.
+  interval = min(interval,2*YEAR); // Again, arbitrary value that seems reasonable at the time. (2/18/11)
   log("Next interval for: " + id);
   log(interval);
   log("After grade of " + i_str(g));

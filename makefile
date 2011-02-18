@@ -4,7 +4,7 @@ FLAG=-g #-O3 #-g
 all: memory
 #	./memory	
 
-memory: $(OBJS)
+memory: $(OBJS) main.cpp
 	g++ -g $(OBJS) main.cpp -o memory $(LIBS)
 
 run: all
@@ -14,6 +14,7 @@ run: all
 	./memory
 
 install: memory
+	cp /usr/bin/memory ./memorybck
 	sudo cp ./memory /usr/bin
 
 make-test: test.cpp

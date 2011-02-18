@@ -45,4 +45,8 @@ UNICODE SO A SIMPLE é DOESN'T BREAK!!
 Okay, so I'm getting these "repeats". This is where I grade a card a success, but it immediately reappears as the next card. Make sure all writes have finished before reading the next card.
 ^diagnosed from the logs. I'm getting integer overflow. A card is successfully reviewed so many times that multiplying is no longer a reasonable rule. Enforce a maximum value of 5 years for intervals.
 
-Basic flashcard breaks when adding a multi-line response. (seg fault)
+Basic flashcard breaks when adding a multi-line response. (seg fault) [Character buffer was 80. Increased. But need to finish this fix by ensuring that overflow condition is no longer a seg fault.]
+
+When reviewing[confirming] an added card, its suffix should be visible.
+
+When in multi-character input, make left and right arrows work.

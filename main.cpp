@@ -13,6 +13,7 @@ using namespace std;
 #include "memory.h"
 Memory m;
 
+const int LINE_BUFFER = 1000;
 int main(int argc, char* argv[])
 {
   log();
@@ -21,7 +22,7 @@ int main(int argc, char* argv[])
 
   m.set_printer(&out);
   char c;
-  char str[80];
+  char str[LINE_BUFFER];
 
   bool mode = false; // If true, take in string. If false, take in char.
   while (true) { // String input

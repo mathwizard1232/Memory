@@ -6,20 +6,7 @@
 #include "basic.h"
 #include "poem.h"
 
-
-// State is now hard-wired to dynamic, anything else is an error.
-/*enum status {main_menu = 0, // Initial screen 
-             logi = 1, // Typing more than one character for login, >= 10 users
-             menu = 2, // Logged in main menu
-             press_key = 3, // Waiting for keypress to continue
-             create_user = 4, //adding a new user
-             ad = 5, //adding new information (simple)
-             poe = 6, // adding a new poem
-             which_ad = 7, // selecting add method
-             revie = 8, // review a card
-             dynamic = 9 // use the message pointers rather than state
-             };*/
-enum status {main_menu,menu,dynamic}; // Slowly refactoring out all mention of above.
+enum status {main_menu,menu,dynamic}; // Legacy type.
 
 // These functions are for when there is no current state or when the current message function,
 // rather than using the dynamic system are using the current single function.
@@ -34,9 +21,7 @@ int Memory::nullstrmessage(char c[]) {
 Memory::Memory()
   :started(false),cmessagep(&Memory::nullcmessage),strmessagep(&Memory::nullstrmessage)
 {  
-  //  
   cat = Category::all();
-  //
 }
 
 void Memory::set_printer(Print* in) {
@@ -473,5 +458,4 @@ void Memory::dump() {
   ofstream out;
   out.open("dump.txt");
   db.dump(out,user);
-  //  db.getCards(user);
 }
