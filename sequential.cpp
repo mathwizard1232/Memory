@@ -11,8 +11,8 @@ Sequential::Sequential(const char p[], const char a[], const string u1, const st
   next_review = time(null);
   active = false; // Don't automatically activate sequential. Manually activate the first element.
 
-  copy_leak(p,prompt);
-  copy_leak(a,ans);
+  prompt = strdup(p);
+  ans = strdup(a);
   unlock1 = u1;
   unlock2 = u2;
 }
@@ -52,7 +52,7 @@ std::string Sequential::decompose(string id, vector<string>& parts) {
 // For a basic flashcard, these are identical.
 string Sequential::insert(Database* d, char u[], string& this_id) {
   Card::db = d; // Set the database connection for this Card.
-  copy_leak(u,user);
+  user = strdup(u);
   BSONObj a;
   string decomp;
   vector<string> subparts;

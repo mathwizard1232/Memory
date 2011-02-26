@@ -1,9 +1,7 @@
-#include <wchar.h>
-typedef wchar_t wchar;
+//#include <wchar.h>
+//typedef wchar_t wchar;
 
-int length(const char* str);
 int copy(const char* in, char* out);
-void copy_leak(const char* in, char*& out);
 void add(const char* end, char* start);
 void convert(char arr[], char* ptr);
 // Case-insensitive character comparison

@@ -1,12 +1,13 @@
 #include "categories.h"
 #include "database.h"
+#include "utility.h"
 
 using std::string;
 
 Category Category::root;// = new Category();
 
 Category::Category()
-  :parent(null), name("all")
+  :parent(null), name("all"), suffix(" ")
 {
 }
 
@@ -42,7 +43,17 @@ Category* Category::findBelow(string target) {
 }
 
 Category* Category::find(string name) {
-  return Category::all()->findBelow(name);
+  if (name == "null") {
+    return Category::all();
+  }
+
+  Category* ans = Category::all()->findBelow(name);
+  if (ans == null) {
+    log(name.c_str());
+    log("could not find ^ in Category::find");
+  }
+
+  return ans;
 }
 
 void Category::add(string p, string n, string s) {

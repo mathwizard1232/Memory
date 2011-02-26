@@ -46,7 +46,7 @@ vector<const char*> Database::extract(cursor c, char field[]) {
   while (c->more()) {
     BSONObj p = c->next();
     const char* curr = p.getStringField(field);
-    char* temp = new char[length(curr)];
+    char* temp = new char[strlen(curr)];
     copy(curr, temp);
     results.push_back(temp);
   }
@@ -70,8 +70,7 @@ Card* Database::next_review(char* user) {
 }
 
 char* readString(BSONObj b, const char* f) {
-  char* temp;
-  copy_leak(b.getStringField(f),temp);
+  char* temp = strdup(b.getStringField(f));
   return temp;
 }
 

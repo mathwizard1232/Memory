@@ -1,12 +1,5 @@
-#include <fstream>
 #include <curses.h>
 #include "print.h"
-#include "utility.h"
-#include <stdlib.h>
-#include <cstring>
-#include <string>
-#include <iostream>
-
 using namespace std;
 
 // General higher-level abstraction of the memory system
@@ -16,17 +9,16 @@ Memory m;
 const int LINE_BUFFER = 1000;
 int main(int argc, char* argv[])
 {
-  log();
-  //  log(L"élan");
-  Print out = Print();
+  log(); // Touch the log file.
+  Print out = Print(); // Initialize the output object.
 
-  m.set_printer(&out);
-  char c;
-  char str[LINE_BUFFER];
+  m.set_printer(&out); // Tell memory where to send output.
+  char c; // space for single character input
+  char str[LINE_BUFFER]; // space for single line input
 
   bool mode = false; // If true, take in string. If false, take in char.
-  while (true) { // String input
-    if (mode) { 
+  while (true) { // Exit with 'q' in single character input modes.
+    if (mode) { // String input
       echo();
       curs_set(1);
       getstr(str);
@@ -38,7 +30,7 @@ int main(int argc, char* argv[])
       c = getch();
       clrtoeol();
     
-      if (c == 'q')
+      if (c == 'q') // Quit program.
         break;
       
       if ((c != ' ') || (out.print_more())) // print_more() returns 1 if no more

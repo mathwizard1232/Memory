@@ -91,6 +91,8 @@ Card* Card::CardFactory(BSONObj b, Database* d) {
 
   if (b.hasField("category")) {
     c->cat = Category::find(readString(b,"category"));
+  } else {
+    c->cat = Category::all();
   }
 
   c->finishRead(b,d);
@@ -137,7 +139,7 @@ void Card::review(Print* pr) {
   p = pr;
   p->cls();
   // Add category suffix
-  char* a = new char[length(prompt) + cat->getSuffix().length() + 2];
+  char* a = new char[strlen(prompt) + cat->getSuffix().length()];
   sprintf(a,"%s %s",prompt,cat->getSuffix().c_str());
   log("Reviewing card.");
   log(id);
@@ -146,7 +148,8 @@ void Card::review(Print* pr) {
   p->print(a);
   //  p->redraw();
   review_state = 0;
-  delete a;
+  //  delete a;
+  free(a);
 }
 
 int Card::review_msg(char c) {

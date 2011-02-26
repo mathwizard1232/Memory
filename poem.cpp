@@ -51,7 +51,7 @@ string Poem::decompose(string id, vector<string>& parts) {
     //    parts.push_back(stanza_id);
     for (int i = stanzas.size()-1; i > 0; i--) {
       sprintf(p,("In %s, stanza #" + i_str(i+1) + ", following:\n%s").c_str(),prompt,stanzas[i-1].c_str());
-      length(stanzas[i].c_str());
+      //      length(stanzas[i].c_str());
       stanza = new Sequential(p,stanzas[i].c_str(),id);
       stanza->setCategory(cat);
       id = stanza->insert(db,user,stanza_id);
@@ -70,7 +70,7 @@ string Poem::decompose(string id, vector<string>& parts) {
 // For a basic flashcard, these are identical.
 string Poem::insert(Database* d, char u[], string& this_id) {
   Card::db = d; // Set the database connection for this Card.
-  copy_leak(u,user);
+  user = strdup(u);
   BSONObj a;
   string decomp;
   vector<string> subparts;

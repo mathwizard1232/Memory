@@ -30,7 +30,7 @@ void Memory::set_printer(Print* in) {
 }
 
 void Memory::display_main_menu() {
-  p->print("Welcome to memory.élan");
+  p->print("Welcome to memory.");
   p->print("(L)ogin");
   p->print("Create a (n)ew user");
 }
@@ -139,11 +139,13 @@ int Memory::add_c(char c) {
   if (yn(c)) {
     if (yes(c)) {
       card->insert(&db,user);
+      free(card);
       substate = 0;
       add();
       return 1;
     }
     else {
+      free(card);
       switch_to_menu();
       return 0;
     }
@@ -171,15 +173,12 @@ int Memory::press_key_c(char c) {
 }
 
 int Memory::login_c(char c) {
-  // This is sloppy because it contains ideas about how to do a clever multikey entry for login.
-  char* a = new char[2];
-  int b;
+  char a[2];
   a[0] = c;
   a[1] = '\0';
-  b = atoi(a);
+  int b = atoi(a);
   if (b) {
-    user = new char[length((char*) users[b-1])+1];
-    copy((char*) users[b-1], user);
+    user = strdup(users[b-1]);
     switch_to_menu();
   }
   else {
@@ -198,7 +197,7 @@ int Memory::login_str(char str[]) {
     switch_to_main_menu();
   } else {
     log("logging in as:");
-    user = new char[length((char*) users[id-1])+1];
+    user = new char[strlen(users[id-1])];
     copy((char*) users[id-1], user);
     switch_to_menu();
     log(user);
@@ -211,12 +210,8 @@ int Memory::login_str(char str[]) {
 // If 0, continues to take characters.
 // Create new message functions. Then message will simply call the relevant function.
 int Memory::message(char c) {
-  int a = (int)c;
-
-  char* b = new char[4];
-  sprintf(b,"%i",a);
   // Handle the character if logical
-  if (c != '\0' && a != -1) {
+  if (c != '\0' && (int)c != -1) {
     return (this->*cmessagep)(c);
   }
   return 0;

@@ -2,33 +2,11 @@
 #include <string>
 #include <fstream>
 #include <stdlib.h>
+#include <string.h>
 
 using std::istream;
 using std::ofstream;
 using std::string;
-
-/*int length(const char* str)
-{
-  if (str[0] == '\0')
-    return 0;
-  else
-    return 1 + length(str + 1);
-    }*/
-
-int length(const char* str) {
-  int l = 0;
-  while (str[l] != '\0') {
-    l++;
-  }
-  return l;
-}
-
-// Copy with allocate
-void copy_leak(const char* in, char*& out) {
-  length(in);
-  out = new char[length(in) + 1];
-  copy(in,out);
-}
 
 int copy(const char* in, char* out) {
   int pos = 0;

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <string.h>
+#include <cstdlib>
 
 using std::endl;
 using std::string;
@@ -41,18 +42,15 @@ void Print::newline() {
 }
 
 void Print::printf(const char form[], const char arg[], bool no_refresh) {
-  char out[length(form)+length(arg)];
+  char out[strlen(form) + strlen(arg)];
   sprintf(out,form,arg);
   print(out,no_refresh);
 }
 
 void Print::print(const char in[], bool no_refresh)
 {
-  // Note: right now I leak memory here. Should change before program becomes mission-critical.
-  // If you're reading this comment and I didn't, I'm sorry. On the other hand, clearly the code was worth
-  // maintaining, so you're welcome.
-  char* str = new char[length(in)+1];
-  copy(in,str);
+  perror(in);
+  char* str = strdup(in);
   if (find(str,'\n') != -1) {
     char* top;
     split(str,'\n',top);
@@ -92,8 +90,8 @@ void Print::redraw(int s) // screen to print
   int maxwidth = 0;
 
   for (int i = 0; i < this->lines; i++) {
-    if (length(this->output[i]) > maxwidth)
-      maxwidth = length(this->output[i]);
+    if (strlen(this->output[i]) > maxwidth)
+      maxwidth = strlen(this->output[i]);
   }
 
   int padding = 0;
@@ -142,8 +140,14 @@ bool Print::print_more() {
 // Get rid of internal storage of characters
 void Print::cls()
 {
-  // Probably leaking memory here.
-  this->lines = 0;
+  if (lines > 0) {
+    lines--;
+    while (this->lines > -1) {
+      free((output[lines--]));
+    }
+  }
+
+  lines = 0;
 
   this->redraw();
 }

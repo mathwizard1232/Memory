@@ -9,12 +9,12 @@ Basic::Basic(const char p[])
   type = standard;
   next_review = time(null);
   active = true;
-  prompt = new char[length(p)+1];
+  prompt = new char[strlen(p)];
   copy(p,prompt);
 }
 
 void Basic::response(const char r[]) {
-  ans = new char[length(r)];
+  ans = new char[strlen(r)];
   copy(r,ans);
 }
 
@@ -22,10 +22,13 @@ void Basic::response(const char r[]) {
 // For a basic flashcard, these are identical.
 std::string Basic::insert(Database* d, char u[], std::string& this_id) {
   Card::db = d; // Set the database connection for this Card.
-  copy_leak(u,user);
+  user = strdup(u);
+  //  BSONObj a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << cat->toString());
+  // BSONObj a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << "null");//cat->toString());
+ //  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << cat->toString());
   BSONObj a;
-  log(user);
-  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << cat->toString());
+  char* tmp = strdup(cat->toString().c_str());
+  a = BSON("user" << user << "prompt" << prompt << "response" << ans << "type" << type << "next_review" << next_review << "active" << active << "category" << tmp);
   this_id = Card::db->insert("memory.data",a);
   return this_id;
 }

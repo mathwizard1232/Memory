@@ -50,3 +50,13 @@ Basic flashcard breaks when adding a multi-line response. (seg fault) [Character
 When reviewing[confirming] an added card, its suffix should be visible.
 
 When in multi-character input, make left and right arrows work.
+
+When entering a response (in original data input) show the prompt at the same time.
+
+Add a "added" timestamp to cards.
+
+Add a view of knowledge.
+
+Add ability to select a view of most recent additions. Especially useful during some debugging...
+
+There's something weird about the string "rubella (German measles)" which crashes a bunch of things it touches. When included as a username, makes the login screen crash.
