@@ -20,6 +20,9 @@ run: start
 gdbrun: start
 	gdb ./memory
 
+val: start
+	valgrind --leak-check=full ./memory
+
 install: memory
 	cp /usr/bin/memory ./memorybck
 	sudo cp ./memory /usr/bin

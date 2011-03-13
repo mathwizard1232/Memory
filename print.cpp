@@ -55,7 +55,9 @@ void Print::print(const char in[], bool no_refresh)
     char* top;
     split(str,'\n',top);
     print(top, no_refresh);
+    free(top);
     print(str, no_refresh);
+    free(str);
     return;
   }
 
@@ -73,6 +75,8 @@ void Print::print(const char in[], bool no_refresh)
   
   if (!no_refresh) 
     this->redraw();
+
+  free(str);
 }
 
 /*void Print::print(const char in[]) {
