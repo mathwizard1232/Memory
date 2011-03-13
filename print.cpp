@@ -32,9 +32,14 @@ Print::Print()
 
 Print::~Print()
 {
-  //this->log->close();
-  
-  //ofstream file("closefile.txt");
+  int i = 0;
+  for (;i<lines;i++) {
+    free(output[i]);
+  }
+
+  if (output) {
+    delete[] output;
+  }
 }
 
 void Print::newline() {
@@ -50,23 +55,24 @@ void Print::printf(const char form[], const char arg[], bool no_refresh) {
 void Print::print(const char in[], bool no_refresh)
 {
   perror(in);
-  char* str = strdup(in);
-  if (find(str,'\n') != -1) {
+  const char* str = strdup(in);
+  char* temp = (char*) str;
+  if (find(temp,'\n') != -1) {
     char* top;
-    split(str,'\n',top);
+    split(temp,'\n',top);
     print(top, no_refresh);
     free(top);
-    print(str, no_refresh);
-    free(str);
+    print(temp, no_refresh);
+    free((char*)str);
     return;
   }
 
   if (this->lines < this->allocated)
-    this->output[this->lines++] = str;
+    this->output[this->lines++] = (char*) str;
   else {
     this->resize();
     if (this->lines < this->allocated)
-      this->output[this->lines++] = str;
+      this->output[this->lines++] = (char*) str;
     else {
       // Unable to increase allocation. This is not normal.
       perror("Unable to allocate more lines in print.");
@@ -76,7 +82,7 @@ void Print::print(const char in[], bool no_refresh)
   if (!no_refresh) 
     this->redraw();
 
-  free(str);
+  //  free(str);
 }
 
 /*void Print::print(const char in[]) {

@@ -34,6 +34,6 @@ std::string Basic::insert(Database* d, char u[], std::string& this_id) {
 }
 
 void Basic::finishRead(BSONObj b, Database* d) {
-  prompt = readString(b,"prompt");
-  ans = readString(b,"response");
+  prompt = strdup(readString(b,"prompt").c_str());
+  ans = strdup(readString(b,"response").c_str());
 }

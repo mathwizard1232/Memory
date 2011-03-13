@@ -11,6 +11,14 @@ Category::Category()
 {
 }
 
+Category::~Category()
+{
+  int i;
+  for (i = 0; i < children.size(); i++) {
+    delete children[i];
+  }
+}
+
 string Category::toString() const {
   return name;
 }
@@ -106,5 +114,6 @@ void Category::load(Database* d) {
     p = Category::find(readString(next, "parent"));
     p = p->makeChild(readString(next,"name"));
     p->setSuffix(readString(next,"suffix"));
+    delete p;
   }
 }

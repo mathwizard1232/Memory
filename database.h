@@ -70,7 +70,7 @@ class Database {
 
 // Utility functions for reading from BSONObjs
 int readInt(BSONObj b, const char* field);
-char* readString(BSONObj, const char* f);
+std::string readString(BSONObj, const char* f);
 bool readBool(BSONObj, const char*);
 std::string readId(BSONObj);
 

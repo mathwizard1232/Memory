@@ -40,14 +40,18 @@ database.o: card.h utility.h database.h database.cpp
 memory.o: print.h database.h card.h memory.h memory.cpp utility.h
 	g++ $(FLAG) -c memory.cpp
 
-card.o: card.h card.cpp utility.h
+CARD_DEP=card.h utility.h database.h
+card.o: card.cpp $(CARD_DEP)
 	g++ $(FLAG) -c card.cpp
 
-basic.o: basic.cpp basic.h card.h
+basic.o: $(CARD_DEP) basic.cpp basic.h
 	$(G) basic.cpp
 
-poem.o: poem.cpp poem.h card.h
+poem.o: poem.cpp poem.h $(CARD_DEP)
 	$(G) poem.cpp
+
+sequential.o: sequential.cpp sequential.h $(CARD_DEP)
+	$(G) sequential.cpp
 
 %.o : %.cpp %.h
 	g++ $(FLAG) -c $<

@@ -86,9 +86,9 @@ string Poem::insert(Database* d, char u[], string& this_id) {
 }
 
 void Poem::finishRead(BSONObj b, Database* d) {
-  prompt = readString(b,"title");
-  author = readString(b,"author");
-  ans = readString(b,"text");
+  prompt = strdup(readString(b,"title").c_str());
+  author = strdup(readString(b,"author").c_str());
+  ans = strdup(readString(b,"text").c_str());
   
   if (b.hasField("components")) { // Ignore atomic sequentials
     BSONObj arr = b.getObjectField("components");

@@ -72,8 +72,8 @@ string Sequential::insert(Database* d, char u[], string& this_id) {
 void Sequential::finishRead(BSONObj b, Database* d) {
    unlock1 = b.getStringField("unlock1");
    unlock2 = b.getStringField("unlock2");
-   prompt = readString(b,"prompt");
-   ans = readString(b,"response");
+   prompt = strdup(readString(b,"prompt").c_str());
+   ans = strdup(readString(b,"response").c_str());
 
    if (b.hasField("components")) { // Ignore atomic sequentials
      BSONObj arr = b.getObjectField("components");

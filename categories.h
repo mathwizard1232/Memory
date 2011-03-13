@@ -12,6 +12,7 @@
 
 class Category {
  public:
+  ~Category();
   // Loads the current categories from the database
   static void load(Database* d);
 

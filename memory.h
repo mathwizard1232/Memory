@@ -12,6 +12,7 @@
 class Memory {
  public:
   Memory();
+  ~Memory();
 
   // Handle an incoming character.
   // If anything other than 0 returned, switch to line input
@@ -19,18 +20,18 @@ class Memory {
 
   // Handle an incoming string.
   // If anything other than 0 returned, continue to take in strings
-  int message(char str[]);
+  int message(const char str[]);
 
   // Takes a pointer to a printer for output
   void set_printer(Print* p);
 
  private:
   int (Memory::*cmessagep)(char); // cmessagep points to the character message handler for the current state.
-  int (Memory::*strmessagep)(char[]); // same for strings
+  int (Memory::*strmessagep)(const char[]); // same for strings
   int nullcmessage(char); // These are the initial values for above. They do nothing but can be called without seg fault.
-  int nullstrmessage(char[]);
+  int nullstrmessage(const char[]);
 
-  int create_user_str(char[]); // This is one of the above type of message handlers.
+  int create_user_str(const char[]); // This is one of the above type of message handlers.
   int which_add_c(char); // Select which method of input to use.
   int review_c(char); // Handles the review process using substates.
   int menu_c(char); // This is the main logged-in menu
@@ -39,18 +40,18 @@ class Memory {
 
   void categories(); // These functions manage the interface for categories.
   int categories_c(char);
-  int categories_str(char[]);
+  int categories_str(const char[]);
   void child();
   void suffix();
 
   int add_c(char);
-  int add_str(char[]);
+  int add_str(const char[]);
   int poem_c(char);
-  int poem_str(char[]);
+  int poem_str(const char[]);
 
   int press_key_c(char);
   int login_c(char);
-  int login_str(char[]);
+  int login_str(const char[]);
 
   void switch_to_main_menu();
   void display_main_menu();
@@ -95,10 +96,6 @@ class Memory {
 
   // Create a new user and change to logged in state
   void new_user();
-
-  // current state of the system
-  // 0 means main menu
-  //  int state; // refactored out. Whoo!
 
   // If inside a complex function (like add), keeps track of internal status
   int substate;

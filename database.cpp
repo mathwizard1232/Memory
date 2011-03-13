@@ -46,7 +46,7 @@ vector<const char*> Database::extract(cursor c, char field[]) {
   while (c->more()) {
     BSONObj p = c->next();
     const char* curr = p.getStringField(field);
-    char* temp = new char[strlen(curr)];
+    char* temp = new char[strlen(curr)+1];
     copy(curr, temp);
     results.push_back(temp);
   }
@@ -69,9 +69,8 @@ Card* Database::next_review(char* user) {
   }
 }
 
-char* readString(BSONObj b, const char* f) {
-  char* temp = strdup(b.getStringField(f));
-  return temp;
+std::string readString(BSONObj b, const char* f) {
+  return std::string(b.getStringField(f));
 }
 
 int readInt(BSONObj b, const char* f) {

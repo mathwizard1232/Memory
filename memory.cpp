@@ -14,7 +14,7 @@ int Memory::nullcmessage(char c) {
   return 0;
 }
 
-int Memory::nullstrmessage(char c[]) {
+int Memory::nullstrmessage(const char c[]) {
   return 0;
 }
 
@@ -22,6 +22,15 @@ Memory::Memory()
   :started(false),cmessagep(&Memory::nullcmessage),strmessagep(&Memory::nullstrmessage)
 {  
   cat = Category::all();
+  users = db.users();
+}
+
+Memory::~Memory()
+{
+  int i;
+  for (i = 0; i < users.size(); i++) {
+    delete users[i];
+  }
 }
 
 void Memory::set_printer(Print* in) {
@@ -68,9 +77,9 @@ void Memory::switch_to_menu() {
   display_menu();
 }
 
-int Memory::create_user_str(char str[]) {
+int Memory::create_user_str(const char str[]) {
   db.add_user(str);
-  user = str;
+  user = strdup(str);
   switch_to_menu();
   return 1;
 }
@@ -187,8 +196,11 @@ int Memory::login_c(char c) {
   return 0;
 }
 
-int Memory::login_str(char str[]) {
-  int id = cstr_i(str);
+int Memory::login_str(const char str[]) {
+  char* tmp = strdup(str);
+  int id = cstr_i(tmp);
+  free(tmp);
+
   log("Logging in as user:");
   log(id);
   log((int) users.size());
@@ -218,6 +230,9 @@ int Memory::message(char c) {
 }
 
 void Memory::review() {
+  if (card) {
+    delete card;
+  }
   card = db.next_review(user);
   if (card == null) {
     cmessagep = &Memory::menu_c;
@@ -275,7 +290,7 @@ void Memory::add() {
   }
 }
 
-int Memory::add_str(char str[]) {
+int Memory::add_str(const char str[]) {
   if (substate == 1) {
     if (str[0] == '\0') {
       switch_to_menu();
@@ -294,14 +309,14 @@ int Memory::add_str(char str[]) {
   }
 }
 
-int Memory::poem_str(char str[]) {
+int Memory::poem_str(const char str[]) {
   card = new Poem(str);
   card->setCategory(cat);
   poem();
   return 1;
 }
 
-int Memory::message(char str[]) {
+int Memory::message(const char str[]) {
   return (this->*strmessagep)(str);
 }
 
@@ -324,6 +339,10 @@ void Memory::resume() {
 
 // return 1 if >= 10 users and start complex input
 int Memory::login() {
+  int i;
+  for (i = 0; i < users.size(); i++) {
+    delete users[i];
+  }
   users = db.users();
 
   cmessagep = &Memory::login_c;
@@ -433,7 +452,7 @@ void Memory::suffix() {
   p->print("Enter the new suffix for this category: ");
 }
 
-int Memory::categories_str(char* c) {
+int Memory::categories_str(const char* c) {
   if (substate == 1) {
     // Create the new child
     if (c != "") {
