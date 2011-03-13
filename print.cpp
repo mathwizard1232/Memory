@@ -61,7 +61,8 @@ void Print::print(const char in[], bool no_refresh)
     char* top;
     split(temp,'\n',top);
     print(top, no_refresh);
-    free(top);
+    //    free(top);
+    delete[] top;
     print(temp, no_refresh);
     free((char*)str);
     return;
@@ -171,8 +172,8 @@ void Print::resize()
     newptr[i] = this->output[i];
   }
 
-  if (this->output != 0) {
-    delete(this->output);
+  if (output) {
+    delete[] output;
   }
 
   this->output = newptr;

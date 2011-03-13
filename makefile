@@ -21,7 +21,7 @@ gdbrun: start
 	gdb ./memory
 
 val: start
-	valgrind --leak-check=full ./memory
+	valgrind -v --leak-check=full ./memory
 
 install: memory
 	cp /usr/bin/memory ./memorybck

@@ -114,6 +114,5 @@ void Category::load(Database* d) {
     p = Category::find(readString(next, "parent"));
     p = p->makeChild(readString(next,"name"));
     p->setSuffix(readString(next,"suffix"));
-    delete p;
   }
 }

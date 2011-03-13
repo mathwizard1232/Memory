@@ -29,7 +29,7 @@ Memory::~Memory()
 {
   int i;
   for (i = 0; i < users.size(); i++) {
-    delete users[i];
+    delete[] users[i];
   }
 }
 
@@ -209,8 +209,10 @@ int Memory::login_str(const char str[]) {
     switch_to_main_menu();
   } else {
     log("logging in as:");
-    user = new char[strlen(users[id-1])];
-    copy((char*) users[id-1], user);
+    //    user = new char[strlen(users[id-1])+1];
+    //    copy((char*) users[id-1], user);
+    //    copy_leak((char*)users[id-1],user);
+    user = strdup(users[id-1]);
     switch_to_menu();
     log(user);
   }
@@ -341,7 +343,7 @@ void Memory::resume() {
 int Memory::login() {
   int i;
   for (i = 0; i < users.size(); i++) {
-    delete users[i];
+    delete[] users[i];
   }
   users = db.users();
 
