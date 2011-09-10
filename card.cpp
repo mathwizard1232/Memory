@@ -159,10 +159,11 @@ int Card::review_msg(char c) {
     review_state = 1;
     return 0;
   } else if (review_state == 1) {
-    return grade(c); // If 1, cycle. If 2, quit.
+    return grade(c); // If 1, cycle. If 2, quit. If -1, prompt for different c.
   } 
 }
 
+// If 1, cycle to next card. If 2, quit repetitions. If -1, prompt for different c.
 int Card::grade(char c) {
   // Convert the grade.
   int a = -1;
@@ -182,7 +183,16 @@ int Card::grade(char c) {
   if (a != -1)
     updateTime(a);
 
-  return (a == -1) + 1;
+  //  return (a == -1) + 1;
+  if (a != -1) {
+    return 1;
+  }
+
+  if (c == ' ') { // Whatever characters should be breakout
+    return 2;
+  }
+
+  return -1;
 }
 
 // 2/11/11: Refactoring this function is my next priority. Functional change will be preventing time overflows; aesthetically will

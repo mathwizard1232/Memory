@@ -19,31 +19,23 @@ Figure out load balancing correctly to learn two different blocks of data at the
 Desired behavior: ? Thoughts: Perhaps this current system is all right, but should probably have options to mix at random between sequence streams. Later, try to develop more fine-tuned controls. Therefore, re-work structure so
 that program is aware of what data is hidden and how it can be sequentially revealed.
 
-Fix users not actually mattering. Currently, a newly created user has access to all data. This shouldn't be.
-
 Ensure that re-adding duplicate knowledge results in no additional cards.
 
-Add the ability to dump to a flat .txt file.
+Refine the ability to dump to a flat .txt file.
 
-If you create a new user, any data added is invalid on the first time through?
 If there are no users, login screen only allows quitting.
+
+There appears to be an excess space in front of the response?
 
 Add the ability to delete information/users.
 
 Make it so that each user can maintain their own category hierarchy.
-
-Switch to unicode so that ç won't break the cards.
 
 Add flipped cards & ability for them to be in different categories.
 
 Rework categories to seamlessly be included in the add sequence.
 
 Refactor code sequence used to create a new user input/screen output/data action tuple in the program.
-
-UNICODE SO A SIMPLE é DOESN'T BREAK!!
-
-Okay, so I'm getting these "repeats". This is where I grade a card a success, but it immediately reappears as the next card. Make sure all writes have finished before reading the next card.
-^diagnosed from the logs. I'm getting integer overflow. A card is successfully reviewed so many times that multiplying is no longer a reasonable rule. Enforce a maximum value of 5 years for intervals.
 
 Basic flashcard breaks when adding a multi-line response. (seg fault) [Character buffer was 80. Increased. But need to finish this fix by ensuring that overflow condition is no longer a seg fault.]
 
@@ -59,12 +51,4 @@ Add a view of knowledge.
 
 Add ability to select a view of most recent additions. Especially useful during some debugging...
 
-There's something weird about the string "rubella (German measles)" which crashes a bunch of things it touches. When included as a username, makes the login screen crash.
-
-todo list wildly out of date
-
-repetitions very easily goes back to menu from extra phantom keystrokes --undocumented feature?
-
 need to add a `broken card' rating, so bad cards can be flagged
-
-lots of segfaults

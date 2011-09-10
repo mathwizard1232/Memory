@@ -21,6 +21,7 @@ int Memory::nullstrmessage(const char c[]) {
 Memory::Memory()
   :started(false),cmessagep(&Memory::nullcmessage),strmessagep(&Memory::nullstrmessage)
 {  
+  card = null;
   cat = Category::all();
   users = db.users();
 }
@@ -104,6 +105,9 @@ int Memory::which_add_c(char c) {
 int Memory::review_c(char c) {
   if (substate == 0) {
     substate = card->review_msg(c);
+    if (substate == -1) { // unrecognized input c, don't switch states
+      substate = 0;
+    }
   }
   if (substate == 1) {
     review();
@@ -149,6 +153,7 @@ int Memory::add_c(char c) {
     if (yes(c)) {
       card->insert(&db,user);
       free(card);
+      card = null;
       substate = 0;
       add();
       return 1;
