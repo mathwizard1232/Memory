@@ -27,8 +27,7 @@ string Database::insert(const char coll[], BSONObj o) {
 }
 
 vector<const char*> Database::users() {
-  return extract(query("memory.users"),
-                 (char*)"name");
+  return extract(query("memory.users"), "name");
 }
 
 cursor Database::query(const char coll[],
@@ -41,7 +40,7 @@ cursor Database::query(const char coll[]) {
 }
 
 // Allocates memory. User must ultimately free this to avoid a leak.
-vector<const char*> Database::extract(cursor c, char field[]) {
+vector<const char*> Database::extract(cursor c, const char field[]) {
   vector<const char*> results;
   while (c->more()) {
     BSONObj p = c->next();

@@ -63,7 +63,7 @@ class Database {
   // From the given cursor, return an array of
   // strings where each line represents the given
   // field of a unique result.
-  vector<const char*> extract(cursor c, char field[]);
+  vector<const char*> extract(cursor c,const char field[]);
 
   DBClientConnection c;
 };

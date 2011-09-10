@@ -60,3 +60,11 @@ Add a view of knowledge.
 Add ability to select a view of most recent additions. Especially useful during some debugging...
 
 There's something weird about the string "rubella (German measles)" which crashes a bunch of things it touches. When included as a username, makes the login screen crash.
+
+todo list wildly out of date
+
+repetitions very easily goes back to menu from extra phantom keystrokes --undocumented feature?
+
+need to add a `broken card' rating, so bad cards can be flagged
+
+lots of segfaults

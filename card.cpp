@@ -32,23 +32,23 @@ void Card::setDB(Database* d) {
 }
 
 Card::Card() 
-  :type(nil), active(false)
+  :type(nil), active(false), prompt(0), ans(0), user(0), author(0)
 {
   cat = Category::all();
 }
 
 Card::~Card() {
   if (prompt) {
-    delete prompt;
+    free(prompt);
   }
   if (ans) {
-    delete ans;
+    free(ans);
   }
   if (user) {
-    delete user;
+    free(user);
   }
   if (author) {
-    delete author;
+    free(author);
   }
 }
 
@@ -139,7 +139,7 @@ void Card::review(Print* pr) {
   p = pr;
   p->cls();
   // Add category suffix
-  char* a = new char[strlen(prompt) + cat->getSuffix().length()];
+  char* a = (char*) malloc(sizeof(char)*(strlen(prompt) + cat->getSuffix().length()+2));
   sprintf(a,"%s %s",prompt,cat->getSuffix().c_str());
   log("Reviewing card.");
   log(id);
@@ -148,7 +148,6 @@ void Card::review(Print* pr) {
   p->print(a);
   //  p->redraw();
   review_state = 0;
-  //  delete a;
   free(a);
 }
 
