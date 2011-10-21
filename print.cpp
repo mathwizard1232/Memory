@@ -104,7 +104,9 @@ void Print::redraw(int s) // screen to print
     if (strlen(this->output[i]) > maxwidth)
       maxwidth = strlen(this->output[i]);
   }
-
+  log("mw:");
+  log(maxwidth);
+  log(this->output[0]);
   int padding = 0;
   if (maxwidth < COLS) {
     padding = (COLS - maxwidth) / 2;
@@ -149,7 +151,7 @@ bool Print::print_more() {
 }   
 
 // Get rid of internal storage of characters
-void Print::cls()
+void Print::cls(bool refresh)
 {
   if (lines > 0) {
     lines--;
@@ -159,8 +161,10 @@ void Print::cls()
   }
 
   lines = 0;
-
-  this->redraw();
+  
+  if (refresh) {
+    this->redraw();
+  }
 }
 
 void Print::resize()

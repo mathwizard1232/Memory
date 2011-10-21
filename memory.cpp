@@ -384,20 +384,30 @@ void Memory::new_user() {
 
 void Memory::manage() {
   p->cls();
+  p->print("(D)elete cruft.");
   p->print("(C)ategories");
-  p->print("(D)ump all data to a flat file.");
+  p->print("(E)xport all data to a flat file.");
   p->print("(B)ack to the main menu.");
 }
 
 int Memory::manage_c(char c) {
   switch (tolower(c)) {
-  case 'd': dump(); break;
+  case 'd': del(); break;
+  case 'e': exprt(); break;
   case 'b': switch_to_menu(); break;
   case 'c': cmessagep = &Memory::categories_c; strmessagep = &Memory::categories_str; categories(); break;
   }
   return 0;
 }
 
+void Memory::del() {
+  p->cls();
+  p->print("Delete extra (u)ser");
+  p->print("(B)ack to the main menu.");
+}
+
+int Memory::del_c(char c) {
+}
 
 void Memory::categories() {
 
@@ -475,8 +485,8 @@ int Memory::categories_str(const char* c) {
   return 1;
 }
 
-void Memory::dump() {
+void Memory::exprt() {
   ofstream out;
-  out.open("dump.txt");
+  out.open("export.txt");
   db.dump(out,user);
 }

@@ -62,3 +62,6 @@ clean:
 	@rm -f test
 	@rm -f main
 	@rm -f *.o
+
+diff: 
+	diff ./memory /usr/bin/memory

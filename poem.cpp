@@ -26,7 +26,7 @@ Poem::Poem(const char file[]) {
   stringstream buffer;
   buffer << f.rdbuf();
   string contents(buffer.str());
-  ans = new char[buffer.str().size() + 1];
+  ans = (char*) malloc(buffer.str().size() + 1);
   copy(contents.c_str(),ans);
 }
 

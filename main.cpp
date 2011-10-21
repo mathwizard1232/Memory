@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     else { // Character input
       c = getch();
       clrtoeol();
+      //      noecho();?
     
       if (c == 'q') // Quit program.
         break;

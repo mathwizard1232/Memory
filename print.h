@@ -20,7 +20,7 @@ class Print {
   //  void print(const char str[]);
   void printf(const char format[],const char arg[], bool no_refresh = false);
   // Clear the screen
-  void cls();
+  void cls(bool refresh = false);
 
   // Add the following sequential elements preceeded by #.
   void list(const vector<const char*> l);

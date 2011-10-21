@@ -37,6 +37,7 @@ class Memory {
   int menu_c(char); // This is the main logged-in menu
   int main_menu_c(char) ; // Login screen shown when starting
   int manage_c(char); // Managing knowledge
+  int del_c(char); // Deleting cruft
 
   void categories(); // These functions manage the interface for categories.
   int categories_c(char);
@@ -65,7 +66,8 @@ class Memory {
   void review();
 
   void manage();
-  void dump();
+  void exprt();//export, but reserved
+  void del();
 
   void continue_at(int stat);
   void resume();

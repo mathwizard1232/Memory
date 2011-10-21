@@ -9,13 +9,15 @@ Basic::Basic(const char p[])
   type = standard;
   next_review = time(null);
   active = true;
-  prompt = new char[strlen(p)];
-  copy(p,prompt);
+  prompt = strdup(p);
+  //(char*) malloc(strlen(p));
+  //copy(p,prompt);
 }
 
 void Basic::response(const char r[]) {
-  ans = new char[strlen(r)];
-  copy(r,ans);
+  ans = strdup(r);
+  //(char*) malloc(strlen(r));
+  //copy(r,ans);
 }
 
 // This_id is the id of this [full] card inserted. The return value is the first [element] card to be activated for this block of memory.

@@ -139,14 +139,14 @@ void Card::review(Print* pr) {
   p = pr;
   p->cls();
   // Add category suffix
-  char* a = (char*) malloc(sizeof(char)*(strlen(prompt) + cat->getSuffix().length()+2));
+  char* a = (char*) malloc(sizeof(char)*(strlen(prompt) + cat->getSuffix().length()));
   sprintf(a,"%s %s",prompt,cat->getSuffix().c_str());
   log("Reviewing card.");
   log(id);
   log(cat->getSuffix());
+  log(a);
   //  p->print(prompt,true);
   p->print(a);
-  //  p->redraw();
   review_state = 0;
   free(a);
 }
@@ -154,8 +154,9 @@ void Card::review(Print* pr) {
 int Card::review_msg(char c) {
   if (review_state == 0) {
     p->cls();
-    p->print(ans,true); // Change print.h to make this single line
-    p->redraw();
+    p->print(ans); // Change print.h to make this single line
+    log("ans:");
+    log(ans);
     review_state = 1;
     return 0;
   } else if (review_state == 1) {
