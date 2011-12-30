@@ -66,6 +66,8 @@ class Card {
   // Id is the previous id. Parts are the components to be decomposed. The return value is the id of the first element.
   virtual std::string decompose(std::string id,std::vector<std::string>& parts);
 
+  // Remove the current card from the database.
+  void delete();
  protected:
   static Database* db;
   static Print* p;

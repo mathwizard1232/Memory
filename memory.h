@@ -47,6 +47,7 @@ class Memory {
 
   int add_c(char);
   int add_str(const char[]);
+  int delete_c(char);
   int poem_c(char);
   int poem_str(const char[]);
 
@@ -60,6 +61,7 @@ class Memory {
   void display_menu();
 
   void add();
+  void delete();
   void which_add();
   void poem();
 
